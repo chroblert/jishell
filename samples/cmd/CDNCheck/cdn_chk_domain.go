@@ -29,8 +29,6 @@ var cdnChkDomainCmd = &jishell.Command{
 }
 
 func init() {
-	//jcmd.App.AddCommand(repeatCommand)
-	//viper.Get("app").(*jishell.App).AddCommand(repeatCommand)
 	var tmpCommands []*jishell.Command
 	if viper.Get("jCommands") == nil {
 		tmpCommands = make([]*jishell.Command, 0)
