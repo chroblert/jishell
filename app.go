@@ -415,8 +415,8 @@ func (a *App) Run() (err error) {
 				// 获取命令
 				c.App.currentCommand = tmpCommand.Name
 				// 设置prompt
-				//c.App.currentPrompt = "Z0SecT00ls "+ tmpCommand.Name +"("+ strings.Join(tmpStrSlice[1:],"/")+ ") >> "
-				c.App.currentPrompt = "Z0SecT00ls " + tmpCommand.Name + "(" + tmpCommand.CMDPath + ") >> "
+				c.App.currentPrompt = c.App.config.Name + " " + tmpCommand.Name + "(" + tmpCommand.CMDPath + ") >> "
+				//jlog.Error("currentPrompt:",c.App.currentPrompt)
 				c.App.SetPrompt(c.App.currentPrompt)
 				// 初始化jflagMaps
 				if tmpCommand.jflagMaps == nil {
@@ -471,9 +471,9 @@ func (a *App) Run() (err error) {
 						for k2, v2 := range tmpCommand.jflagMaps[v.Long].Value.([]interface{}) {
 							tmpStrSlice[k2] = fmt.Sprintf("%v", v2)
 						}
-						a.Printf("%-10v%-30v%-10v%-10v%v\n", v.Long, "["+strings.Join(tmpStrSlice, " ")+"]", "flag", tmpCommand.jflagMaps[v.Long].IsDefault, v.HelpArgs+". "+v.Help)
+						a.Printf("%-10v%-30v%10v%v\n", v.Long, "["+strings.Join(tmpStrSlice, " ")+"]", "flag", v.HelpArgs+". "+v.Help)
 					} else {
-						a.Printf("%-10v%-30v%-10v%-10v%v\n", v.Long, tmpCommand.jflagMaps[v.Long].Value, "flag", tmpCommand.jflagMaps[v.Long].IsDefault, v.HelpArgs+". "+v.Help)
+						a.Printf("%-10v%-30v%-10v%v\n", v.Long, tmpCommand.jflagMaps[v.Long].Value, "flag", v.HelpArgs+". "+v.Help)
 					}
 				}
 				// JC 220512 遍历输出args
@@ -495,9 +495,9 @@ func (a *App) Run() (err error) {
 						} else {
 							tmpArgValue = fmt.Sprintf("%v", tmpCommand.jargMaps[v.Name].Value)
 						}
-						a.Printf("%-10v%-30v%-10v%-10v%v\n", v.Name, tmpArgValue, "arg", "", v.HelpArgs+". "+v.Help)
+						a.Printf("%-10v%-30v%-10v%v\n", v.Name, tmpArgValue, "arg", v.HelpArgs+". "+v.Help)
 					} else {
-						a.Printf("%-10v%-30v%-10v%-10v%v\n", v.Name, "", "arg", "", v.HelpArgs+". "+v.Help)
+						a.Printf("%-10v%-30v%-10v%v\n", v.Name, "", "arg", v.HelpArgs+". "+v.Help)
 					}
 				}
 				return nil
@@ -531,6 +531,9 @@ func (a *App) Run() (err error) {
 				}
 				// 获取设置的参数
 				arg := c.Args.String("args")
+				if !strings.ContainsRune(arg, '=') {
+					return fmt.Errorf("missing arg value")
+				}
 				argName := strings.Split(arg, "=")[0]
 				argValue := strings.Split(arg, "=")[1:]
 				argValueStr := strings.Join(argValue, "=")
@@ -557,6 +560,7 @@ func (a *App) Run() (err error) {
 				return nil
 			},
 			isBuiltin: true,
+			Completer: nil,
 		})
 		// 添加setf命令
 		a.AddCommand(&Command{
@@ -579,6 +583,9 @@ func (a *App) Run() (err error) {
 				}
 				// 获取设置的参数
 				arg := c.Args.String("args")
+				if !strings.ContainsRune(arg, '=') {
+					return fmt.Errorf("missing arg value")
+				}
 				argName := strings.Split(arg, "=")[0]
 				argValue := strings.Split(arg, "=")[1]
 				//argValueStr := strings.Join(argValue,"=")
@@ -624,14 +631,13 @@ func (a *App) Run() (err error) {
 					//jlog.Errorf("error: command u input not exist\n")
 					return fmt.Errorf("error: CurrentCommond is %v,please use 'use <command>' first", tmpCommand)
 				}
+				// 判断是否设置了help=true
+				if tmpCommand.jflagMaps["help"].Value == true {
+					c.App.printCommandHelp(c.App, tmpCommand, c.App.isShell)
+					return nil
+				}
 				// 执行前判断arg是否全部赋值
 				for _, v := range tmpCommand.args.list {
-					// 判断是否可选项
-					//if !v.optional {
-					//	if _, ok := tmpCommand.jargMaps[v.Name]; !ok {
-					//		return fmt.Errorf("请为所有arg类型的参数赋值")
-					//	}
-					//}
 					if _, ok := tmpCommand.jargMaps[v.Name]; !ok {
 						return fmt.Errorf("请为所有arg类型的参数赋值")
 					}
@@ -861,6 +867,7 @@ Loop:
 
 		// Readline.
 		line, err := a.rl.Readline()
+		//jlog.Error("line:",line)
 		if err != nil {
 			if err == readline.ErrInterrupt {
 				interruptCount++

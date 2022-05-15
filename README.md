@@ -6,47 +6,47 @@
 
 ## Introduction
 
-Create a jishell APP.
+目录层级
+
+创建一个`jishell APP`
 
 ```go
-var app = jishell.New(&jishell.Config{
-	Name:        "app",
-	Description: "short app description",
-
+var App = jishell.New(&jishell.Config{
+	Name:                  "CheckTest",
+	Description:           "",
 	Flags: func(f *jishell.Flags) {
-		f.String("d", "directory", "DEFAULT", "set an alternative directory path")
-		f.Bool("v", "verbose", false, "enable verbose mode")
+		f.BoolL("verbose",false,"")
 	},
+	CurrentCommand:        "CheckTest", // shell中使用，一定不要与其他子命令的Name值重复。建议与该app Name值相同。
 })
 ```
 
-Register a top-level command. *Note: Sub commands are also supported...*
+创建一个APP下的子命令
 
 ```go
-app.AddCommand(&jishell.Command{
-    Name:      "daemon",
-    Help:      "run the daemon",
-    Aliases:   []string{"run"},
-
-    Flags: func(f *jishell.Flags) {
-        f.Duration("t", "timeout", time.Second, "timeout duration")
-    },
-
-    Args: func(a *jishell.Args) {
-        a.String("service", "which service to start", jishell.Default("server"))
-    },
-
-    Run: func(c *jishell.Context) error {
-        // Parent Flags.
-        c.App.Println("directory:", c.Flags.String("directory"))
-        c.App.Println("verbose:", c.Flags.Bool("verbose"))
-        // Flags.
-        c.App.Println("timeout:", c.Flags.Duration("timeout"))
-        // Args.
-        c.App.Println("service:", c.Args.String("service"))
-        return nil
-    },
-})
+var cdnChkDomainCmd = &jishell.Command{
+	Name:      "cdnChkD",
+	Help:      "检测目标域名是否使用了CDN",
+	LongHelp:  "",
+	HelpGroup: "CDN Check",
+	Usage:     "",
+	Flags: func(f *jishell.Flags) {
+		f.Bool("b","boolf",true,"")
+	},
+	Args: func(a *jishell.Args) {
+		a.String("host", "hostname.eg: www.test.com")
+		a.Bool("verbose","")
+        a.StringList("t", "")
+	},
+	Run: func(c *jishell.Context) error {
+		jlog.Info("boolf:",c.Flags.Bool("boolf"))
+		jlog.Info("host:",c.Args.String("host"))
+		jlog.Info("verbose:",c.Args.Bool("verbose"))
+        jlog.Info("t:",c.Args.StringList("t"))
+		return nil
+	},
+	CMDPath:   "Info/CDN", // 用来标记该命令所在的分组。用于use的自动补全
+}
 ```
 ```
 List类型的值以,进行分隔。

@@ -36,6 +36,7 @@ type completer struct {
 }
 
 func newCompleter(commands *Commands, s string) *completer {
+	//jlog.Error(commands,s)
 	return &completer{
 		commands:       commands,
 		currentCommand: s,
@@ -45,20 +46,29 @@ func newCompleter(commands *Commands, s string) *completer {
 func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	// Discard anything after the cursor position.
 	// This is similar behaviour to shell/bash.
+	//jlog.Error(string(line),pos)
 	line = line[:pos]
 
 	var words []string
+	// 以空白字符进行分隔，若无报错，则words值为空白字符分隔的字符串列表
 	if w, err := shlex.Split(string(line), true, false); err == nil {
 		words = w
 	} else {
 		words = strings.Fields(string(line)) // fallback
 	}
-
+	//jlog.Error("words:",words)
 	prefix := ""
+	// 如果字符串列表不为空，且pos大于1，并且最后一个字符不为空格
+	// prefix为空白分隔的words的最后一个字符串
+	// words为其余的字符串列表
+	// 若最后一个字符为空格，则prefix为空字符串；words为字符串列表
 	if len(words) > 0 && pos >= 1 && line[pos-1] != ' ' {
 		prefix = words[len(words)-1]
 		words = words[:len(words)-1]
 	}
+	//jlog.Error(len(line),"line2:",line,", pos:",pos)
+	//jlog.Error(len(prefix),"prefix:",prefix)
+	//jlog.Error(len(words),"words2:",words)
 
 	// Simple hack to allow auto completion for help.
 	if len(words) > 0 && words[0] == "help" {
@@ -66,15 +76,16 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	}
 
 	var (
-		cmds        *Commands
-		flags       *Flags
+		cmds  *Commands
+		flags *Flags
+		//args 		*Args
 		suggestions [][]rune
 	)
 
 	// Find the last commands list.
 	if len(words) == 0 {
 		cmds = c.commands
-	} else {
+	} else { // 子命令 xxx形式
 		cmd, rest, err := c.commands.FindCommand(words)
 		if err != nil || cmd == nil {
 			return
@@ -96,17 +107,102 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 
 		cmds = &cmd.commands
 		flags = &cmd.flags
+		//args = &cmd.args
 	}
 
-	if len(prefix) > 0 {
-		if len(words) > 0 && words[len(words)-1] == "use" {
-			//jlog.Errorf("JCTest:%v\n",c.commands.list)
-			for _, cmd := range c.commands.list {
-				if strings.HasPrefix(cmd.CMDPath+"/"+cmd.Name, prefix) {
-					suggestions = append(suggestions, []rune(strings.TrimPrefix(cmd.CMDPath+"/"+cmd.Name, prefix))) // JC 220515
+	// JC 220515:自动补全要切换的命令
+	if len(words) > 0 && words[0] == "use" {
+		for _, v := range c.commands.list {
+			if v.CMDPath != "" {
+				if len(prefix) > 0 {
+					if strings.HasPrefix(v.CMDPath+"/"+v.Name, prefix) {
+						suggestions = append(suggestions, []rune(strings.TrimPrefix(v.CMDPath+"/"+v.Name, prefix))) // JC 220515
+					}
+				} else {
+					suggestions = append(suggestions, []rune(v.CMDPath+"/"+v.Name)) // JC 220515
 				}
 			}
 		}
+	}
+	// [+]210530: Add setf 自动补全当前cmd的flag
+	// [·]220515: update
+	if len(words) > 0 && words[0] == "setf" {
+		// 获取当前的命令
+		for _, v := range c.commands.list {
+			if v.Name == c.currentCommand {
+				for _, v2 := range v.flags.list {
+					if len(prefix) > 0 {
+						if strings.HasPrefix(v2.Long, prefix) {
+							suggestions = append(suggestions, []rune(strings.TrimPrefix(v2.Long, prefix)))
+						}
+					} else {
+						suggestions = append(suggestions, []rune(v2.Long))
+					}
+				}
+				break
+			}
+		}
+	}
+	// end
+	// [+]220515: Add seta 自动补全当前cmd的arg
+	if len(words) > 0 && words[0] == "seta" {
+		// 获取当前的命令
+		for _, v := range c.commands.list {
+			if v.Name == c.currentCommand {
+				for _, v2 := range v.args.list {
+					if len(prefix) > 0 {
+						if strings.HasPrefix(v2.Name, prefix) {
+							suggestions = append(suggestions, []rune(strings.TrimPrefix(v2.Name, prefix)))
+						}
+					} else {
+						suggestions = append(suggestions, []rune(v2.Name))
+					}
+				}
+				break
+			}
+		}
+	}
+	// end
+	// [+]220515: Add unsetf 自动补全当前cmd的flag
+	if len(words) > 0 && words[0] == "unsetf" {
+		// 获取当前的命令
+		for _, v := range c.commands.list {
+			if v.Name == c.currentCommand {
+				for _, v2 := range v.flags.list {
+					if len(prefix) > 0 {
+						if strings.HasPrefix(v2.Long, prefix) {
+							suggestions = append(suggestions, []rune(strings.TrimPrefix(v2.Long, prefix)))
+						}
+					} else {
+						suggestions = append(suggestions, []rune(v2.Long))
+					}
+				}
+				break
+			}
+		}
+	}
+	// end
+	// [+]220515: Add unseta 自动补全当前cmd的arg
+	if len(words) > 0 && words[0] == "unseta" {
+		// 获取当前的命令
+		for _, v := range c.commands.list {
+			if v.Name == c.currentCommand {
+				for _, v2 := range v.args.list {
+					if len(prefix) > 0 {
+						if strings.HasPrefix(v2.Name, prefix) {
+							suggestions = append(suggestions, []rune(strings.TrimPrefix(v2.Name, prefix)))
+						}
+					} else {
+						suggestions = append(suggestions, []rune(v2.Name))
+					}
+				}
+				break
+			}
+		}
+	}
+	// end
+	if len(prefix) > 0 {
+		// 看有没有子命令
 		for _, cmd := range cmds.list {
 			if strings.HasPrefix(cmd.Name, prefix) {
 				suggestions = append(suggestions, []rune(strings.TrimPrefix(cmd.Name, prefix)))
@@ -118,76 +214,36 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 			}
 		}
 
+		// 自动补全flag，默认显示long flag
 		if flags != nil {
 			for _, f := range flags.list {
+				long := "--" + f.Long
+				if len(prefix) < len(long) && strings.HasPrefix(long, prefix) {
+					suggestions = append(suggestions, []rune(strings.TrimPrefix(long, prefix)))
+					continue
+				}
 				if len(f.Short) > 0 {
 					short := "-" + f.Short
 					if len(prefix) < len(short) && strings.HasPrefix(short, prefix) {
 						suggestions = append(suggestions, []rune(strings.TrimPrefix(short, prefix)))
 					}
 				}
-				long := "--" + f.Long
-				if len(prefix) < len(long) && strings.HasPrefix(long, prefix) {
-					suggestions = append(suggestions, []rune(strings.TrimPrefix(long, prefix)))
-				}
 			}
 		}
 	} else {
-		// [+]210528: 自动填充命令
-		//jlog.Errorf("JCTest:words:%v_\n",words[len(words)-1])
-		if len(words) > 0 && words[len(words)-1] == "use" {
-			//jlog.Errorf("JCTest:cmds.list:%v\n",c.commands.list)
-			for _, v := range c.commands.list {
-				//jlog.Errorf("%v\n",v.CMDPath)
-				if v.CMDPath != "" {
-					suggestions = append(suggestions, []rune(v.CMDPath+"/"+v.Name)) // JC 220515
-				}
-			}
-		}
-		// end
-		// [+]210530: Add set 自动填充参数
-		if len(words) > 0 && words[len(words)-1] == "set" {
-			// 获取当前的命令
-			//jlog.Errorf("JCTest:cmds.list:%v\n",c.commands.list)
-			for _, v := range c.commands.list {
-				//jlog.Errorf("%v:%v\n",v.Name,c.currentCommand)
-				if v.Name == c.currentCommand {
-					//jlog.Errorf("%v\n",v.flags.list)
-					for _, v2 := range v.flags.list {
-						suggestions = append(suggestions, []rune(v2.Long))
-					}
-					//suggestions = append(suggestions,[]rune(v.flags.list))
-					break
-				}
-			}
-		}
-		// end
+
 		for _, cmd := range cmds.list {
 			suggestions = append(suggestions, []rune(cmd.Name))
 		}
 		if flags != nil {
 			for _, f := range flags.list {
-				suggestions = append(suggestions, []rune("--"+f.Long))
-				if len(f.Short) > 0 {
+				if f.Long != "" {
+					suggestions = append(suggestions, []rune("--"+f.Long))
+				} else if len(f.Short) > 0 {
 					suggestions = append(suggestions, []rune("-"+f.Short))
 				}
 			}
 		}
 	}
-	//if prefix == "use"{
-	//	for _,v := range cmds.list{
-	//		jlog.Errorf("%v\n",v.CMDPath)
-	//		suggestions = append(suggestions,[]rune(v.CMDPath))
-	//	}
-	//}
-	// Append an empty space to each suggestions.
-	//for i, s := range suggestions {
-	//	suggestions[i] = append(s, ' ')
-	//}
-	//for _,v := range suggestions{
-	//	jlog.Errorf("JCTest:%v,%v_\n",string(v),prefix)
-	//
-	//}
-
 	return suggestions, len(prefix)
 }

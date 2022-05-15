@@ -224,7 +224,7 @@ func (f *Flags) String(short, long, defaultValue, help string) {
 
 //210520: JC0o0l Add
 // String registers a string flag.
-func (f *Flags) StringSlice(short, long string, defaultValue []string, help string) {
+func (f *Flags) StringList(short, long string, defaultValue []string, help string) {
 	f.register(short, long, help, "stringSlice", true, defaultValue,
 		func(res FlagMap) {
 			res[long] = &FlagMapItem{
@@ -312,7 +312,7 @@ func (f *Flags) BoolL(long string, defaultValue bool, help string) {
 
 // Bool registers a boolean flag.
 func (f *Flags) Bool(short, long string, defaultValue bool, help string) {
-	f.register(short, long, help, "", false, defaultValue,
+	f.register(short, long, help, "bool", false, defaultValue,
 		func(res FlagMap) {
 			res[long] = &FlagMapItem{
 				Value:     defaultValue,
