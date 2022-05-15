@@ -3,7 +3,7 @@
 [![GoDoc](https://godoc.org/github.com/chroblert/jishell?status.svg)](https://godoc.org/github.com/chroblert/jishell)
 [![Go Report Card](https://goreportcard.com/badge/github.com/chroblert/jishell)](https://goreportcard.com/report/github.com/chroblert/jishell)
 
-本项目基于grumble进行开发，在其基础上做了如下改变：
+本框架基于[desertbit/grumble](github.com/desertbit/grumble)进行开发，在其基础上做了如下改变：
 
 - list类型的`arg`和`flag`，基于`,`进行分割
 - 子命令中可使用多个list类型的`arg`
