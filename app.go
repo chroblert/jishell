@@ -89,6 +89,7 @@ func New(c *Config) (a *App) {
 	// Register the builtin flags.
 	a.flags.Bool("h", "help", false, "display help")
 	a.flags.BoolL("nocolor", false, "disable color output")
+	a.flags.Bool("i", "interactive", false, "enable interactive mode")
 
 	// Register the user flags, if present.
 	if c.Flags != nil {
@@ -307,8 +308,12 @@ func (a *App) Run() (err error) {
 	if len(args) > 0 {
 		args = args[1:]
 	}
+	// 如果可执行程序后跟的第一个参数是 -i,则进入交互模式；默认是控制台模式
+	//if len(args) > 0 && args[0] == "-i"{
+	//	a.isShell = true
+	//	args = args[1:]
+	//}
 	// Parse the app command line flags.
-	//jlog.Error(args)
 	args, err = a.flags.parse(args, a.flagMap)
 	if err != nil {
 		return err
@@ -316,9 +321,16 @@ func (a *App) Run() (err error) {
 
 	// Check if nocolor was set.
 	a.config.NoColor = a.flagMap.Bool("nocolor")
-
 	// Determine if this is a shell session.
-	a.isShell = len(args) == 0
+	//a.isShell = len(args) == 0
+	// JC 220520 获取-i flag值
+	a.isShell = a.flagMap.Bool("interactive")
+	// JC 220520 再根据是否有别的参数，来设置是否为shell模式
+	if len(args) > 0 {
+		a.isShell = false
+	}
+	//jlog.Error(len(args),args)
+	//jlog.Error(a.config.NoColor,a.isShell)
 
 	// Add general builtin commands.
 	a.addCommand(&Command{
@@ -381,6 +393,8 @@ func (a *App) Run() (err error) {
 			},
 			isBuiltin: true,
 		})
+		// TODO 嵌套子命令如何切换
+		//
 		// 添加use命令
 		a.AddCommand(&Command{
 			Name:      "use",
