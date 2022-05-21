@@ -26,6 +26,7 @@ package jishell
 
 import (
 	"fmt"
+	"github.com/chroblert/jgoutils/jlog"
 	"io"
 	"os"
 	"reflect"
@@ -527,7 +528,7 @@ func (a *App) Run() (err error) {
 						for k2, v2 := range tmpCommand.jflagMaps[v.Long].Value.([]interface{}) {
 							tmpStrSlice[k2] = fmt.Sprintf("%v", v2)
 						}
-						a.Printf("%-10v%-30v%10v%v\n", v.Long, "["+strings.Join(tmpStrSlice, " ")+"]", "flag", v.HelpArgs+". "+v.Help)
+						a.Printf("%-10v%-30v%-10v%v\n", v.Long, "["+strings.Join(tmpStrSlice, " ")+"]", "flag", v.HelpArgs+". "+v.Help)
 					} else {
 						a.Printf("%-10v%-30v%-10v%v\n", v.Long, tmpCommand.jflagMaps[v.Long].Value, "flag", v.HelpArgs+". "+v.Help)
 					}
@@ -568,8 +569,7 @@ func (a *App) Run() (err error) {
 		})
 		// 添加setf命令
 		a.AddCommand(&Command{
-			Name: "setf",
-
+			Name:      "setf",
 			Aliases:   nil,
 			Help:      "set flag",
 			LongHelp:  "",
@@ -600,10 +600,6 @@ func (a *App) Run() (err error) {
 					}
 					if argName == v.Long {
 						// DONE 解析flag
-						//tmpCommand.jflagMaps[argName] = &FlagMapItem{
-						//	Value:     nil,
-						//	IsDefault: false,
-						//}
 						_, err := tmpCommand.flags.parse([]string{"--" + argName + "=" + argValueStr}, tmpCommand.jflagMaps)
 						if err != nil {
 							//jlog.Error(err)
@@ -620,8 +616,7 @@ func (a *App) Run() (err error) {
 		})
 		// 添加setf命令
 		a.AddCommand(&Command{
-			Name: "seta",
-
+			Name:      "seta",
 			Aliases:   nil,
 			Help:      "set arg",
 			LongHelp:  "",
@@ -645,6 +640,26 @@ func (a *App) Run() (err error) {
 				argName := strings.Split(arg, "=")[0]
 				argValue := strings.Split(arg, "=")[1]
 				//argValueStr := strings.Join(argValue,"=")
+				jlog.Info("argValue:", argValue)
+				// 区分arg的类型
+				var splitArgs = []string{argValue}
+				// 枚举当前命令的arg
+				if c.App.currentCmd != nil {
+					for _, v := range c.App.currentCmd.args.list {
+						if v.Name == argName {
+							// 不是list类型
+							jlog.Error(v.isList)
+							if !v.isList {
+								splitArgs, err = shlex.Split(argValue, true, false)
+								if err != nil {
+									return err
+								}
+							}
+						}
+					}
+				}
+				argValue = splitArgs[0]
+				jlog.Info("argValue:", argValue)
 				// 判断argName是否在当前命令的arg中
 				for _, v := range tmpCommand.args.list {
 					if argName == v.Name {

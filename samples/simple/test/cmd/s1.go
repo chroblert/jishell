@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"github.com/chroblert/jgoutils/jlog"
 	"github.com/chroblert/jishell"
 	_ "github.com/chroblert/jishell/samples/simple/test/cmd/s1"
-	"github.com/chroblert/jlog"
 	"github.com/spf13/viper"
 )
 
@@ -14,10 +14,24 @@ var s1Cmd = &jishell.Command{
 	LongHelp:  "",
 	HelpGroup: "",
 	Usage:     "",
-	Flags:     nil,
-	Args:      nil,
+	Flags: func(f *jishell.Flags) {
+		f.StringL("f1", "", "")
+		f.StringList("f", "fl2", []string{}, "")
+		f.IntL("il", 1, "")
+	},
+	Args: func(a *jishell.Args) {
+		a.String("a1", "")
+		a.StringList("al", "")
+		a.IntList("il", "")
+		a.BoolList("bl", "")
+	},
 	Run: func(c *jishell.Context) error {
-		jlog.NInfo("s1")
+		jlog.Info(c.Flags.String("f1"))
+		jlog.Info(c.Args.String("a1"))
+		jlog.Info(c.Args.StringList("al"))
+		jlog.Info(c.Flags.Int("il"))
+		jlog.Info(c.Args.IntList("il"))
+		jlog.Info(c.Args.BoolList("bl"))
 		return nil
 	},
 	Completer: nil,

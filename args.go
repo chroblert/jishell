@@ -175,6 +175,12 @@ func (a *Args) parse(args []string, res ArgMap) ([]string, error) {
 func (a *Args) String(name, help string, opts ...ArgOption) {
 	a.register(name, help, "string", false,
 		func(args []string, res ArgMap) ([]string, error) {
+			//jlog.Error(args[0])
+			//splitArgs, err := shlex.Split(args[0], true, false )
+			//jlog.Error(splitArgs)
+			//if err != nil {
+			//	return nil, err
+			//}
 			res[name] = &ArgMapItem{Value: args[0]}
 			return args[1:], nil
 		},

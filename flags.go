@@ -205,7 +205,8 @@ func (f *Flags) String(short, long, defaultValue, help string) {
 			}
 			if len(equalVal) > 0 {
 				res[long] = &FlagMapItem{
-					Value:     trimQuotes(equalVal),
+					//Value:     trimQuotes(equalVal),
+					Value:     equalVal,
 					IsDefault: false,
 				}
 				return args, true, nil
@@ -225,7 +226,7 @@ func (f *Flags) String(short, long, defaultValue, help string) {
 //210520: JC0o0l Add
 // String registers a string flag.
 func (f *Flags) StringList(short, long string, defaultValue []string, help string) {
-	f.register(short, long, help, "stringSlice", true, defaultValue,
+	f.register(short, long, help, "string list", true, defaultValue,
 		func(res FlagMap) {
 			res[long] = &FlagMapItem{
 				Value:     []interface{}{},
@@ -234,7 +235,6 @@ func (f *Flags) StringList(short, long string, defaultValue []string, help strin
 			for _, v := range defaultValue {
 				res[long].Value = append(res[long].Value.([]interface{}), v)
 			}
-
 		},
 		func(flag, equalVal string, args []string, res FlagMap) ([]string, bool, error) {
 			//defer func(){
