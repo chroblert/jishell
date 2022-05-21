@@ -26,7 +26,6 @@ package jishell
 
 import (
 	"fmt"
-	"github.com/chroblert/jgoutils/jlog"
 	"io"
 	"os"
 	"reflect"
@@ -293,7 +292,30 @@ func (a *App) RunCommand(args []string) error {
 		a.printCommandHelp(a, cmd, a.isShell)
 		return nil
 	}
-
+	//jlog.Warn("runCommand:",cmd.Name,cmd.isBuiltin)
+	//jlog.Error("args:",len(args),args)
+	// 如果该cmd不是内置命令，则处理args的双引号
+	if !cmd.isBuiltin {
+		for k, v := range args {
+			splitArgs, err := shlex.Split(v, true, false)
+			if err != nil {
+				return err
+			}
+			args[k] = splitArgs[0]
+		}
+		// 处理flag的双引号
+		for k, v := range fg {
+			//jlog.Info(reflect.TypeOf(v).Kind().String())
+			if reflect.TypeOf(v.Value).Kind().String() == "string" {
+				//jlog.Info("fg:",k,":",v.Value)
+				splitArgs, _ := shlex.Split(v.Value.(string), true, false)
+				fg[k] = &FlagMapItem{
+					Value:     splitArgs[0],
+					IsDefault: false,
+				}
+			}
+		}
+	}
 	// Parse the arguments.
 	cmdArgMap := make(ArgMap)
 	args, err = cmd.args.parse(args, cmdArgMap)
@@ -591,8 +613,14 @@ func (a *App) Run() (err error) {
 					return fmt.Errorf("missing arg value")
 				}
 				argName := strings.Split(arg, "=")[0]
-				argValue := strings.Split(arg, "=")[1:]
-				argValueStr := strings.Join(argValue, "=")
+				argValue := strings.Split(arg, "=")[1]
+				//argValueStr := strings.Join(argValue, "=")
+				//jlog.Info("argValue:",trimQuotes(argValue))
+				splitArgs, err := shlex.Split(argValue, true, false)
+				if err != nil {
+					return err
+				}
+				argValue = splitArgs[0]
 				// 判断argName是否在当前命令的flag中
 				for _, v := range tmpCommand.flags.list {
 					if tmpCommand.jflagMaps == nil {
@@ -600,7 +628,7 @@ func (a *App) Run() (err error) {
 					}
 					if argName == v.Long {
 						// DONE 解析flag
-						_, err := tmpCommand.flags.parse([]string{"--" + argName + "=" + argValueStr}, tmpCommand.jflagMaps)
+						_, err := tmpCommand.flags.parse([]string{"--" + argName + "=" + argValue}, tmpCommand.jflagMaps)
 						if err != nil {
 							//jlog.Error(err)
 							return err
@@ -640,7 +668,7 @@ func (a *App) Run() (err error) {
 				argName := strings.Split(arg, "=")[0]
 				argValue := strings.Split(arg, "=")[1]
 				//argValueStr := strings.Join(argValue,"=")
-				jlog.Info("argValue:", argValue)
+				//jlog.Info("argValue:", argValue)
 				// 区分arg的类型
 				var splitArgs = []string{argValue}
 				// 枚举当前命令的arg
@@ -648,7 +676,7 @@ func (a *App) Run() (err error) {
 					for _, v := range c.App.currentCmd.args.list {
 						if v.Name == argName {
 							// 不是list类型
-							jlog.Error(v.isList)
+							//jlog.Error(v.isList)
 							if !v.isList {
 								splitArgs, err = shlex.Split(argValue, true, false)
 								if err != nil {
@@ -659,7 +687,7 @@ func (a *App) Run() (err error) {
 					}
 				}
 				argValue = splitArgs[0]
-				jlog.Info("argValue:", argValue)
+				//jlog.Info("argValue:", argValue)
 				// 判断argName是否在当前命令的arg中
 				for _, v := range tmpCommand.args.list {
 					if argName == v.Name {
@@ -1036,7 +1064,7 @@ Loop:
 		}
 
 		// Split the line to args.
-		args, err := shlex.Split(line, true, true, ' ')
+		args, err := shlex.Split(line, true, true)
 		//jlog.Error("args:",len(args),args)
 		if err != nil {
 			a.PrintError(fmt.Errorf("invalid args: %v", err))
