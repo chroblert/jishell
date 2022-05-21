@@ -37,6 +37,8 @@ type Commands struct {
 // Add the command to the slice.
 // Duplicates are ignored.
 func (c *Commands) Add(cmd *Command) {
+	// TODO
+	//cmd.previousCmd = nil
 	c.list = append(c.list, cmd)
 	c.changed = true
 }
@@ -87,6 +89,7 @@ func (c *Commands) Get(name string) *Command {
 			}
 		}
 		// JC 220512: 遍历FullPath
+		// TODO 有待完善
 		//jlog.Error(cmd.CMDPath,name,cmd.CMDPath==name)
 		if cmd.CMDPath+"/"+cmd.Name == name {
 			return cmd

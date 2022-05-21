@@ -79,6 +79,10 @@ github.com/chroblert/go-shlex v0.1.2 h1:AttKmYFCSeFjWFiryLeQDM0U3e7SFcFaAzAPWkp4
 github.com/chroblert/go-shlex v0.1.2/go.mod h1:WVSTUMKH0hdEC8lCssgu4wMssi3OLmYYZRgA3pEvTMU=
 github.com/chroblert/jgoutils v0.1.35 h1:Fwhv4qXtJk/r+U6HtZf7JfqRWdIhUhYSX72L909BPkw=
 github.com/chroblert/jgoutils v0.1.35/go.mod h1:wzP3kM+DJ94KP/TZlvIDyl5JLTBi3oWxIWTg6NQ+utA=
+github.com/chroblert/jgoutils v0.1.38 h1:J5f973M+7x1SMCFfKnJ261a20VfLe0G+79qA4ygPtug=
+github.com/chroblert/jgoutils v0.1.38/go.mod h1:wzP3kM+DJ94KP/TZlvIDyl5JLTBi3oWxIWTg6NQ+utA=
+github.com/chroblert/jlog v0.0.2 h1:VkB7BuEXp5qRHjh7wq1L0Ptm7YxBb8Ay4XTJRjmEFSs=
+github.com/chroblert/jlog v0.0.2/go.mod h1:NQb2An4gch4EAmmYK4/6/d0fUThFjlNcsHQp0kyrDAw=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=

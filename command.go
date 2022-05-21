@@ -26,6 +26,7 @@ package jishell
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Command is just that, a command for your application.
@@ -67,14 +68,16 @@ type Command struct {
 	// A non-nil Completer overrides the default behaviour.
 	Completer func(prefix string, args []string) []string
 
-	parent    *Command
-	flags     Flags
-	args      Args
-	commands  Commands
-	isBuiltin bool    // Whenever this is a build-in command not added by the user.
-	jflagMaps FlagMap // JC0o0l add
-	CMDPath   string  // JC0o0l add.用来指定命令所在路径，模拟用。可以用来自动补全
-	jargMaps  ArgMap  // JC 220512 add
+	parent      *Command
+	flags       Flags
+	args        Args
+	commands    Commands
+	isBuiltin   bool     // Whenever this is a build-in command not added by the user.
+	jflagMaps   FlagMap  // JC0o0l add
+	CMDPath     string   // JC0o0l add.用来指定命令所在路径，模拟用。可以用来自动补全 TODO 可能废弃
+	jargMaps    ArgMap   // JC 220512 add
+	parentPath  string   // JC 220520 记录从app至父命令的路径
+	previousCmd *Command // JC 220521 存放use切换前的Command，初始为nil
 }
 
 func (c *Command) validate() error {
@@ -109,6 +112,25 @@ func (c *Command) Parent() *Command {
 	return c.parent
 }
 
+// 递归解决parentPath问题
+func setParentPath(c, cmd *Command) {
+	// 防止末尾出现多个/
+	if strings.ContainsRune(cmd.parentPath, '/') {
+		cmd.parentPath = "/" + c.Name + cmd.parentPath
+	} else {
+		cmd.parentPath = "/" + c.Name + cmd.parentPath + "/"
+	}
+	// 结束条件：最后一层子命令
+	if len(cmd.commands.list) == 0 {
+		return
+	}
+	// 递归
+	for _, v := range cmd.commands.list {
+		setParentPath(c, v)
+	}
+	return
+}
+
 // AddCommand adds a new command.
 // Panics on error.
 func (c *Command) AddCommand(cmd *Command) {
@@ -116,10 +138,10 @@ func (c *Command) AddCommand(cmd *Command) {
 	if err != nil {
 		panic(err)
 	}
-
+	// JC 220521 使用递归遍历子命令，为其加上父路径
+	setParentPath(c, cmd)
 	cmd.parent = c
 	cmd.registerFlagsAndArgs(true)
-
 	c.commands.Add(cmd)
 }
 

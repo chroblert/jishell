@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/chroblert/jgoutils/jlog"
 	"github.com/chroblert/jishell"
-	_ "github.com/chroblert/jishell/samples/cmd/CDNCheck"
+	_ "github.com/chroblert/jishell/samples/full/cmd/CDNCheck"
 	"github.com/spf13/viper"
 )
 
@@ -13,7 +13,7 @@ var App = jishell.New(&jishell.Config{
 	Flags: func(f *jishell.Flags) {
 		f.BoolL("verbose", false, "")
 	},
-	CurrentCommand: "CheckTest",
+	CurrentCmdStr: "CheckTest",
 })
 
 func init() {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/chroblert/jishell"
-	"github.com/chroblert/jishell/samples/cmd"
+	"github.com/chroblert/jishell/samples/full/cmd"
 )
 
 func main() {
