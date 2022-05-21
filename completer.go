@@ -25,25 +25,21 @@
 package jishell
 
 import (
-	"fmt"
-	"github.com/chroblert/jgoutils/jlog"
 	"strings"
 
 	shlex "github.com/chroblert/go-shlex"
 )
 
 type completer struct {
-	commands       *Commands
-	currentCommand string
-	currentCmd     *Command
+	commands   *Commands
+	currentCmd *Command
 }
 
-func newCompleter(commands *Commands, s string, currentCmd *Command) *completer {
-	jlog.Error("new completer")
+func newCompleter(commands *Commands, currentCmd *Command) *completer {
+	//jlog.Error("new completer")
 	return &completer{
-		commands:       commands,
-		currentCommand: s,
-		currentCmd:     currentCmd,
+		commands:   commands,
+		currentCmd: currentCmd,
 	}
 }
 
@@ -58,7 +54,7 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	if w, err := shlex.Split(string(line), true, false); err == nil {
 		words = w
 	} else {
-		jlog.Error("error:", err)
+		//jlog.Error("error:", err)
 		words = strings.Fields(string(line)) // fallback
 	}
 	//jlog.Error("words:",words)
@@ -67,12 +63,12 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	// prefix为空白分隔的words的最后一个字符串
 	// words为其余的字符串列表
 	// 若最后一个字符为空格，则prefix为空字符串；words为字符串列表
-	jlog.Warn("-:", len(words), words, ",line:", fmt.Sprintf("_%s_", string(line)))
+	//jlog.Warn("-:", len(words), words, ",line:", fmt.Sprintf("_%s_", string(line)))
 	if len(words) > 0 && pos >= 1 && line[pos-1] != ' ' {
 		prefix = words[len(words)-1]
 		words = words[:len(words)-1]
 	}
-	jlog.Warn("--:", len(words), words, ",--prefix:", prefix)
+	//jlog.Warn("--:", len(words), words, ",--prefix:", prefix)
 	//jlog.Error(len(line),"line2:",line,", pos:",pos)
 	//jlog.Error(len(prefix),"prefix:",prefix)
 	//jlog.Error(len(words),"words2:",words)
@@ -86,16 +82,23 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	firstIsBuiltInCmd = true
 	if len(words) == 0 {
 		for _, v := range c.commands.list {
-			jlog.Info("cmd:", v.Name, v.isBuiltin)
+			//jlog.Info("cmd:", v.Name, v.isBuiltin)
 			if !v.isBuiltin {
 				cmds = append(cmds, v)
 			}
 		}
 	} else {
 		switch words[0] {
+		case "help":
+			for _, v := range c.commands.list {
+				//jlog.Info("cmd:", v.Name, v.isBuiltin)
+				if !v.isBuiltin {
+					cmds = append(cmds, v)
+				}
+			}
 		case "use":
 			for _, v := range c.commands.list {
-				jlog.Info("cmd:", v.Name, v.isBuiltin)
+				//jlog.Info("cmd:", v.Name, v.isBuiltin)
 				if !v.isBuiltin {
 					cmds = append(cmds, v)
 				}
@@ -139,24 +142,24 @@ func (c *completer) Do(line []rune, pos int) (newLine [][]rune, length int) {
 			cmds = cmd.commands.list
 			flags = &cmd.flags
 			args = &cmd.args
-			jlog.Warn("cmds1:", len(cmds), cmds)
+			//jlog.Warn("cmds1:", len(cmds), cmds)
 		}
 	}
 
-	jlog.Warn("words1:", len(words), words)
-	for _, v := range c.commands.list {
-		jlog.Warn("<in use> subCommand:", v.Name)
-	}
-	if args != nil {
-		for _, v := range args.list {
-			jlog.Warn("<arg> :", v.Name)
-		}
-	}
-	if flags != nil {
-		for _, v := range flags.list {
-			jlog.Warn("<flag> :", v.Long)
-		}
-	}
+	//jlog.Warn("words1:", len(words), words)
+	//for _, v := range c.commands.list {
+	//	jlog.Warn("<in use> subCommand:", v.Name)
+	//}
+	//if args != nil {
+	//	for _, v := range args.list {
+	//		jlog.Warn("<arg> :", v.Name)
+	//	}
+	//}
+	//if flags != nil {
+	//	for _, v := range flags.list {
+	//		jlog.Warn("<flag> :", v.Long)
+	//	}
+	//}
 
 	if len(prefix) > 0 {
 		// 看有没有子命令

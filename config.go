@@ -74,7 +74,7 @@ type Config struct {
 	HelpHeadlineColor     *color.Color
 
 	// JC0o0l Add
-	CurrentCmdStr string
+	//CurrentCmdStr string
 	//// JC 220520
 	//currnetCmd *Command // JC 220520 提现当前的Command
 

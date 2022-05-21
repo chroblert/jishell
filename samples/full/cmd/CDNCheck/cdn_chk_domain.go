@@ -25,7 +25,6 @@ var cdnChkDomainCmd = &jishell.Command{
 		jlog.Info("verbose:", c.Args.Bool("verbose"))
 		return nil
 	},
-	CMDPath: "Info/CDN",
 }
 
 func init() {

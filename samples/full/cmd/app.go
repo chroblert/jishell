@@ -13,7 +13,7 @@ var App = jishell.New(&jishell.Config{
 	Flags: func(f *jishell.Flags) {
 		f.BoolL("verbose", false, "")
 	},
-	CurrentCmdStr: "CheckTest",
+	//CurrentCmdStr: "CheckTest",
 })
 
 func init() {

@@ -33,7 +33,6 @@ var cdnCmd = &jishell.Command{
 		jlog.Info(len(c.Args.StringList("f")), c.Args.StringList("t"))
 		return nil
 	},
-	CMDPath: "Info/CDN",
 }
 
 func init() {

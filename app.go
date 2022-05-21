@@ -26,7 +26,6 @@ package jishell
 
 import (
 	"fmt"
-	"github.com/chroblert/jgoutils/jlog"
 	"io"
 	"os"
 	"reflect"
@@ -62,9 +61,9 @@ type App struct {
 	printASCIILogo   func(a *App)
 
 	// JC0o0l Add
-	currentCommandStr string
-	currentCmd        *Command // JC 220520 存放当前的Command，初始为nil
-	previousCmd       *Command // JC 220520 存放use切换前的Command，初始为nil
+	//currentCommandStr string
+	currentCmd  *Command // JC 220520 存放当前的Command，初始为nil
+	previousCmd *Command // JC 220520 存放use切换前的Command，初始为nil
 }
 
 // New creates a new app.
@@ -79,21 +78,21 @@ func New(c *Config) (a *App) {
 
 	// APP.
 	a = &App{
-		Closer:            closer.New(),
-		config:            c,
-		currentPrompt:     c.prompt(),
-		flagMap:           make(FlagMap),
-		printHelp:         defaultPrintHelp,
-		printCommandHelp:  defaultPrintCommandHelp,
-		interruptHandler:  defaultInterruptHandler,
-		currentCommandStr: c.CurrentCmdStr,
-		currentCmd:        nil,
+		Closer:           closer.New(),
+		config:           c,
+		currentPrompt:    c.prompt(),
+		flagMap:          make(FlagMap),
+		printHelp:        defaultPrintHelp,
+		printCommandHelp: defaultPrintCommandHelp,
+		interruptHandler: defaultInterruptHandler,
+		//currentCommandStr: c.CurrentCmdStr,
+		currentCmd: nil,
 	}
 
 	// Register the builtin flags.
 	a.flags.Bool("h", "help", false, "display help")
 	a.flags.BoolL("nocolor", false, "disable color output")
-	a.flags.Bool("i", "interactive", false, "enable interactive mode")
+	//a.flags.Bool("i", "interactive", true, "enable interactive mode")
 
 	// Register the user flags, if present.
 	if c.Flags != nil {
@@ -117,13 +116,13 @@ func (a *App) GetPrompt() string {
 }
 
 //
-func (a *App) SetCurrentCommand(c string) {
-	a.currentCommandStr = c
-}
-
-func (a *App) GetCurrentCommand() string {
-	return a.currentCommandStr
-}
+//func (a *App) SetCurrentCommand(c string) {
+//	a.currentCommandStr = c
+//}
+//
+//func (a *App) GetCurrentCommand() string {
+//	return a.currentCommandStr
+//}
 
 // SetDefaultPrompt resets the current prompt to the default prompt as
 // configured in the config.
@@ -260,7 +259,25 @@ func (a *App) addCommand(cmd *Command, addHelpFlag bool) {
 func (a *App) RunCommand(args []string) error {
 	// Parse the arguments string and obtain the command path to the root,
 	// and the command flags.
-	cmds, fg, args, err := a.commands.parse(args, a.flagMap, false)
+	var (
+		cmds []*Command
+		fg   FlagMap
+		//args []string
+		err error
+	)
+	if a.currentCmd == nil {
+		cmds, fg, args, err = a.commands.parse(args, a.flagMap, false)
+	} else {
+		var tmpCommands = Commands{}
+		for _, v := range a.commands.list {
+			tmpCommands.Add(v)
+		}
+		for _, v := range a.currentCmd.commands.list {
+			tmpCommands.Add(v)
+		}
+		//tmpCommands = a.commands.
+		cmds, fg, args, err = tmpCommands.parse(args, a.flagMap, false)
+	}
 	if err != nil {
 		return err
 	} else if len(cmds) == 0 {
@@ -327,20 +344,20 @@ func (a *App) Run() (err error) {
 	// Check if nocolor was set.
 	a.config.NoColor = a.flagMap.Bool("nocolor")
 	// Determine if this is a shell session.
-	//a.isShell = len(args) == 0
+	a.isShell = len(args) == 0
 	// JC 220520 获取-i flag值
-	a.isShell = a.flagMap.Bool("interactive")
+	//a.isShell = a.flagMap.Bool("interactive")
 	// JC 220520 再根据是否有别的参数，来设置是否为shell模式
-	if len(args) > 0 {
-		a.isShell = false
-	}
+	//if len(args) > 0 {
+	//	a.isShell = false
+	//}
 	//jlog.Error(len(args),args)
 	//jlog.Error(a.config.NoColor,a.isShell)
 
 	// Add general builtin commands.
 	a.addCommand(&Command{
-		Name:      "help",
-		CMDPath:   "",
+		Name: "help",
+
 		Help:      "use 'help [command]' for command help",
 		HelpGroup: "Core Commands",
 		Args: func(a *Args) {
@@ -352,7 +369,13 @@ func (a *App) Run() (err error) {
 				a.printHelp(a, a.isShell)
 				return nil
 			}
-			cmd, _, err := a.commands.FindCommand(args)
+			var cmd *Command
+			var err error
+			if c.App.currentCmd == nil {
+				cmd, _, err = a.commands.FindCommand(args)
+			} else {
+				cmd, _, err = a.currentCmd.commands.FindCommand(args)
+			}
 			if err != nil {
 				return err
 			} else if cmd == nil {
@@ -377,8 +400,8 @@ func (a *App) Run() (err error) {
 	if a.isShell {
 		// Add shell builtin commands.
 		a.AddCommand(&Command{
-			Name:      "exit",
-			CMDPath:   "",
+			Name: "exit",
+
 			Help:      "exit the shell",
 			HelpGroup: "Core Commands",
 			Run: func(c *Context) error {
@@ -388,8 +411,8 @@ func (a *App) Run() (err error) {
 			isBuiltin: true,
 		})
 		a.AddCommand(&Command{
-			Name:      "clear",
-			CMDPath:   "",
+			Name: "clear",
+
 			Help:      "clear the screen",
 			HelpGroup: "Core Commands",
 			Run: func(c *Context) error {
@@ -398,12 +421,10 @@ func (a *App) Run() (err error) {
 			},
 			isBuiltin: true,
 		})
-		// TODO 嵌套子命令如何切换
-		//
 		// 添加use命令
 		a.AddCommand(&Command{
-			Name:      "use",
-			CMDPath:   "",
+			Name: "use",
+
 			Aliases:   nil,
 			Help:      "switch command",
 			LongHelp:  "",
@@ -431,7 +452,7 @@ func (a *App) Run() (err error) {
 					//jlog.Errorf("error: command u input not exist\n")
 					return fmt.Errorf("command %s u input not exist", inputCmdStr)
 				}
-				jlog.Error("currentCmd:", c.App.currentCmd)
+				//jlog.Error("currentCmd:", c.App.currentCmd)
 				//jlog.Error(tmpCommand)
 				//c.App.previousCmd = c.App.currentCmd // 记录切换前的command
 				tmpCommand.previousCmd = c.App.currentCmd // 记录切换前的command
@@ -439,7 +460,7 @@ func (a *App) Run() (err error) {
 				// 获取命令
 				//jlog.Warn(c.App.currentCommandStr)
 				//jlog.Warn(tmpCommand.Name)
-				c.App.currentCommandStr = tmpCommand.Name
+				//c.App.currentCommandStr = tmpCommand.Name
 				// 设置prompt
 				c.App.currentPrompt = c.App.config.Name + " " + tmpCommand.Name + "(" + tmpCommand.parentPath + ") >> "
 				c.App.SetPrompt(c.App.currentPrompt)
@@ -460,23 +481,23 @@ func (a *App) Run() (err error) {
 				// [+]220521: Add 设置自动填充参数
 				//jlog.Error(c.App.currentCmd)
 				if c.App.currentCmd == nil {
-					jlog.Error("app:", c.App.commands.list)
-					c.App.rl.Config.AutoComplete = newCompleter(&c.App.commands, c.App.currentCommandStr, c.App.currentCmd)
+					//jlog.Error("app.commands.list:", c.App.commands.list)
+					c.App.rl.Config.AutoComplete = newCompleter(&c.App.commands, c.App.currentCmd)
 				} else {
-					jlog.Error(c.App.currentCmd.Name, c.App.currentCmd.commands.list)
-					c.App.rl.Config.AutoComplete = newCompleter(&c.App.currentCmd.commands, c.App.currentCommandStr, c.App.currentCmd)
+					//jlog.Error("cmd.commands.list:",c.App.currentCmd.Name, c.App.currentCmd.commands.list)
+					c.App.rl.Config.AutoComplete = newCompleter(&c.App.currentCmd.commands, c.App.currentCmd)
 				}
-				for _, v := range c.App.currentCmd.commands.list {
-					jlog.Warn("subCommand:", v.Name)
-				}
+				//for _, v := range c.App.currentCmd.commands.list {
+				//	jlog.Warn("subCommand:", v.Name)
+				//}
 				return nil
 			},
 			isBuiltin: true,
 		})
 		// 添加show命令
 		a.AddCommand(&Command{
-			Name:      "show",
-			CMDPath:   "",
+			Name: "show",
+
 			Aliases:   nil,
 			Help:      "show options",
 			LongHelp:  "",
@@ -500,7 +521,7 @@ func (a *App) Run() (err error) {
 					if v.Long == "help" {
 						continue
 					}
-					// TODO 待完善
+					// TODO 待完善: 是否能够自适应
 					if "slice" == reflect.TypeOf(tmpCommand.jflagMaps[v.Long].Value).Kind().String() {
 						tmpStrSlice := make([]string, len(tmpCommand.jflagMaps[v.Long].Value.([]interface{})))
 						for k2, v2 := range tmpCommand.jflagMaps[v.Long].Value.([]interface{}) {
@@ -547,8 +568,8 @@ func (a *App) Run() (err error) {
 		})
 		// 添加setf命令
 		a.AddCommand(&Command{
-			Name:      "setf",
-			CMDPath:   "",
+			Name: "setf",
+
 			Aliases:   nil,
 			Help:      "set flag",
 			LongHelp:  "",
@@ -599,8 +620,8 @@ func (a *App) Run() (err error) {
 		})
 		// 添加setf命令
 		a.AddCommand(&Command{
-			Name:      "seta",
-			CMDPath:   "",
+			Name: "seta",
+
 			Aliases:   nil,
 			Help:      "set arg",
 			LongHelp:  "",
@@ -650,8 +671,8 @@ func (a *App) Run() (err error) {
 		})
 		// 添加run命令
 		a.AddCommand(&Command{
-			Name:      "run",
-			CMDPath:   "",
+			Name: "run",
+
 			Aliases:   nil,
 			Help:      "run current command",
 			LongHelp:  "",
@@ -694,8 +715,8 @@ func (a *App) Run() (err error) {
 		})
 		// 添加run命令
 		a.AddCommand(&Command{
-			Name:      "run",
-			CMDPath:   "",
+			Name: "run",
+
 			Aliases:   nil,
 			Help:      "run current command",
 			LongHelp:  "",
@@ -738,8 +759,8 @@ func (a *App) Run() (err error) {
 		})
 		// 添加back命令
 		a.AddCommand(&Command{
-			Name:      "back",
-			CMDPath:   "",
+			Name: "back",
+
 			Aliases:   nil,
 			Help:      "back",
 			LongHelp:  "",
@@ -754,20 +775,20 @@ func (a *App) Run() (err error) {
 				if c.App.currentCmd == nil {
 					return nil
 				}
-				jlog.Warn("currentCmd:", c.App.currentCmd)
+				//jlog.Warn("currentCmd:", c.App.currentCmd)
 				c.App.currentCmd = c.App.currentCmd.previousCmd
 				if c.App.currentCmd == nil {
 					c.App.currentPrompt = c.App.config.Name + " >> "
 				} else {
-					jlog.Warn("previousCmd:", c.App.currentCmd)
+					//jlog.Warn("previousCmd:", c.App.currentCmd)
 					c.App.currentPrompt = c.App.config.Name + fmt.Sprintf(" %s(%s) >>", c.App.currentCmd.Name, c.App.currentCmd.parentPath)
 				}
-				jlog.Warn("currentPrompt:", c.App.currentPrompt)
+				//jlog.Warn("currentPrompt:", c.App.currentPrompt)
 				c.App.SetPrompt(c.App.currentPrompt)
 				// [+]220521: Add 设置自动填充参数
 				if c.App.currentCmd == nil {
-					jlog.Error("app:", c.App.commands.list)
-					c.App.rl.Config.AutoComplete = newCompleter(&c.App.commands, c.App.currentCommandStr, c.App.currentCmd)
+					//jlog.Error("app:", c.App.commands.list)
+					c.App.rl.Config.AutoComplete = newCompleter(&c.App.commands, c.App.currentCmd)
 				} else {
 					// 初始化jflagMaps
 					if c.App.currentCmd.jflagMaps == nil {
@@ -783,8 +804,55 @@ func (a *App) Run() (err error) {
 					if c.App.currentCmd.jargMaps == nil {
 						c.App.currentCmd.jargMaps = make(ArgMap)
 					}
-					jlog.Error(c.App.currentCmd.Name, c.App.currentCmd.commands.list)
-					c.App.rl.Config.AutoComplete = newCompleter(&c.App.currentCmd.commands, c.App.currentCommandStr, c.App.currentCmd)
+					//jlog.Error(c.App.currentCmd.Name, c.App.currentCmd.commands.list)
+					c.App.rl.Config.AutoComplete = newCompleter(&c.App.currentCmd.commands, c.App.currentCmd)
+				}
+				return nil
+			},
+			isBuiltin: true,
+			Completer: nil,
+			parent:    nil,
+			flags:     Flags{},
+			args:      Args{},
+			commands:  Commands{},
+			jflagMaps: nil,
+		})
+		// 添加unsetf命令
+		a.AddCommand(&Command{
+			Name: "unsetf",
+
+			Aliases:   nil,
+			Help:      "unset flag",
+			LongHelp:  "",
+			HelpGroup: "Core Commands",
+			Usage:     "unsetf <long flag name>|all",
+			Flags:     nil,
+			Args: func(a *Args) {
+				a.String("args", "long flag name or all")
+			},
+			Run: func(c *Context) error {
+				// 获取当前command
+				tmpCommand := c.App.currentCmd
+				if tmpCommand == nil {
+					return fmt.Errorf("error: CurrentCommond is %v,please use 'use <command>' first \n", tmpCommand)
+				}
+				// 获取设置的参数
+				arg := c.Args.String("args")
+				// 初始化flag
+				if arg == "all" { // 初始化每一个flag
+					for _, v := range tmpCommand.flags.list {
+						df := tmpCommand.flags.defaults[v.Long]
+						df(tmpCommand.jflagMaps)
+					}
+					//jlog.Debug("unset all flag")
+				} else { // 初始化指定flag
+					for _, v := range tmpCommand.flags.list {
+						if v.Long == arg {
+							df := tmpCommand.flags.defaults[v.Long]
+							df(tmpCommand.jflagMaps)
+							return nil
+						}
+					}
 				}
 				return nil
 			},
@@ -798,8 +866,8 @@ func (a *App) Run() (err error) {
 		})
 		// 添加unseta命令
 		a.AddCommand(&Command{
-			Name:      "unseta",
-			CMDPath:   "",
+			Name: "unseta",
+
 			Aliases:   nil,
 			Help:      "unset arg ",
 			LongHelp:  "",
@@ -846,55 +914,7 @@ func (a *App) Run() (err error) {
 			commands:  Commands{},
 			jflagMaps: nil,
 		})
-		// 添加reset命令
-		//a.AddCommand(&Command{
-		//	Name:      "reset",
-		//	CMDPath:  "",
-		//	Aliases:   nil,
-		//	Help:      "reset long flag",
-		//	LongHelp:  "",
-		//	HelpGroup: "Core Commands",
-		//	Usage:     "",
-		//	Flags:     nil,
-		//	Args: func(a *Args) {
-		//		a.String("args", "long flag name or all")
-		//	},
-		//	Run: func(c *Context) error {
-		//		// 获取当前command
-		//		tmpCommand := c.App.currentCmd
-		//		if tmpCommand == nil {
-		//			//jlog.Errorf("error: command u input not exist\n")
-		//			return fmt.Errorf("error: CurrentCommond is %v,please use 'use <command>' first \n", tmpCommand)
-		//		}
-		//		// 获取设置的参数
-		//		arg := c.Args.String(("args"))
-		//		// 初始化flag
-		//		if arg == "all" { // 初始化每一个flag
-		//			for _, v := range tmpCommand.flags.list {
-		//				df := tmpCommand.flags.defaults[v.Long]
-		//				df(tmpCommand.jflagMaps)
-		//			}
-		//			//jlog.Debug("unset all flag")
-		//		} else { // 初始化指定flag
-		//			for _, v := range tmpCommand.flags.list {
-		//				if v.Long == arg {
-		//					df := tmpCommand.flags.defaults[v.Long]
-		//					df(tmpCommand.jflagMaps)
-		//					//jlog.Debugf("unset flag %v\n",v.Long)
-		//					return nil
-		//				}
-		//			}
-		//		}
-		//		return nil
-		//	},
-		//	isBuiltin: true,
-		//	Completer: nil,
-		//	parent:    nil,
-		//	flags:     Flags{},
-		//	args:      Args{},
-		//	commands:  Commands{},
-		//	jflagMaps: nil,
-		//})
+
 	}
 	// Run the init hook.
 	if a.initHook != nil {
@@ -916,7 +936,7 @@ func (a *App) Run() (err error) {
 		DisableAutoSaveHistory: true,
 		HistoryFile:            a.config.HistoryFile,
 		HistoryLimit:           a.config.HistoryLimit,
-		AutoComplete:           newCompleter(&a.commands, a.currentCommandStr, nil),
+		AutoComplete:           newCompleter(&a.commands, nil),
 		VimMode:                a.config.VimMode,
 	})
 
@@ -1007,23 +1027,6 @@ Loop:
 			a.PrintError(fmt.Errorf("invalid args: %v", err))
 			continue Loop
 		}
-		//for i,arg := range args{
-		//	if strings.ContainsRune(arg,','){
-		//		jlog.Error(arg)
-		//		argValueList,err := shlex.Split(arg, true, true, ',')
-		//		if err != nil{
-		//			a.PrintError(fmt.Errorf("invalid args: %v", err))
-		//			continue Loop
-		//		}
-		//		argWrap1 := strings.Join(argValueList,",")
-		//		//argWrap1 = "\""+argWrap1+"\""
-		//		jlog.Error(argWrap1)
-		//		args[i] = argWrap1
-		//		jlog.Error(args)
-		//
-		//	}
-		//}
-
 		// Execute the command.
 		err = a.RunCommand(args)
 		if err != nil {

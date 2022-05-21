@@ -68,13 +68,13 @@ type Command struct {
 	// A non-nil Completer overrides the default behaviour.
 	Completer func(prefix string, args []string) []string
 
-	parent      *Command
-	flags       Flags
-	args        Args
-	commands    Commands
-	isBuiltin   bool     // Whenever this is a build-in command not added by the user.
-	jflagMaps   FlagMap  // JC0o0l add
-	CMDPath     string   // JC0o0l add.用来指定命令所在路径，模拟用。可以用来自动补全 TODO 可能废弃
+	parent    *Command
+	flags     Flags
+	args      Args
+	commands  Commands
+	isBuiltin bool    // Whenever this is a build-in command not added by the user.
+	jflagMaps FlagMap // JC0o0l add
+	//CMDPath     string   // JC0o0l add.用来指定命令所在路径，模拟用。可以用来自动补全
 	jargMaps    ArgMap   // JC 220512 add
 	parentPath  string   // JC 220520 记录从app至父命令的路径
 	previousCmd *Command // JC 220521 存放use切换前的Command，初始为nil

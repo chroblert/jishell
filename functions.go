@@ -108,7 +108,7 @@ func defaultPrintHelp(a *App, shell bool) {
 			//	output = append(output, fmt.Sprintf("%s | %v", name, c.Help))
 			//}
 			// JC 220512: 输出 命令 路径 帮助信息
-			output = append(output, fmt.Sprintf("%s | %s | %v", c.Name, c.CMDPath, c.Help))
+			output = append(output, fmt.Sprintf("%s | %s | %v", c.Name, c.parentPath, c.Help))
 		}
 
 		if len(output) > 0 {

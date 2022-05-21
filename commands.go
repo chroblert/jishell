@@ -26,6 +26,7 @@ package jishell
 
 import (
 	"sort"
+	"strings"
 )
 
 // Commands collection.
@@ -90,8 +91,7 @@ func (c *Commands) Get(name string) *Command {
 		}
 		// JC 220512: 遍历FullPath
 		// TODO 有待完善
-		//jlog.Error(cmd.CMDPath,name,cmd.CMDPath==name)
-		if cmd.CMDPath+"/"+cmd.Name == name {
+		if strings.ReplaceAll(cmd.parentPath+"/"+cmd.Name, "//", "/") == name {
 			return cmd
 		}
 	}
