@@ -33,7 +33,21 @@
 
 ![](https://gitee.com/chroblert/pictures/raw/master/img/20220515210929.png)
 
-
+## 使用
+可借用jishell-cli工具来进行辅助创建
+```shell
+go get -u github.com/chroblert/jishell-cli
+jishell-cli init --package Test
+cd Test
+jishell-cli add subcommand
+```
+or
+```shell
+go get -u github.com/chroblert/jishell-cli
+jishell-cli init Test
+jishell-cli add subcommand
+```
+> 若遇到报错，可更新到最新版，提issue
 ## Introduction
 
 目录层级
@@ -59,7 +73,6 @@ var App = jishell.New(&jishell.Config{
 	Flags: func(f *jishell.Flags) {
 		f.BoolL("verbose",false,"")
 	},
-	CurrentCommand:        "CheckTest", // shell中使用，一定不要与其他子命令的Name值重复。建议与该app Name值相同。
 })
 ```
 
@@ -111,7 +124,6 @@ var cdnChkDomainCmd = &jishell.Command{
         jlog.Info("t:",c.Args.StringList("t"))
 		return nil
 	},
-	CMDPath:   "Info/CDN", // 用来标记该命令所在的分组。用于use的自动补全
 }
 ```
 ```

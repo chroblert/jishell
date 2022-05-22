@@ -26,6 +26,7 @@ package jishell
 
 import (
 	"fmt"
+	"github.com/chroblert/jlog"
 	"io"
 	"os"
 	"reflect"
@@ -307,11 +308,14 @@ func (a *App) RunCommand(args []string) error {
 		for k, v := range fg {
 			//jlog.Info(reflect.TypeOf(v).Kind().String())
 			if reflect.TypeOf(v.Value).Kind().String() == "string" {
-				//jlog.Info("fg:",k,":",v.Value)
-				splitArgs, _ := shlex.Split(v.Value.(string), true, false)
-				fg[k] = &FlagMapItem{
-					Value:     splitArgs[0],
-					IsDefault: false,
+				if len(v.Value.(string)) > 0 {
+					jlog.Warn("fg:", k, ":", v.Value)
+					splitArgs, _ := shlex.Split(v.Value.(string), true, false)
+					jlog.Warn("splitArgs:", splitArgs)
+					fg[k] = &FlagMapItem{
+						Value:     splitArgs[0],
+						IsDefault: false,
+					}
 				}
 			}
 		}
