@@ -26,6 +26,7 @@ package jishell
 
 import (
 	"fmt"
+	"github.com/chroblert/jlog"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"io"
 	"os"
@@ -548,7 +549,6 @@ func (a *App) Run() (err error) {
 					if v.Long == "help" {
 						continue
 					}
-					// TODO 待完善: 是否能够自适应
 					if "slice" == reflect.TypeOf(tmpCommand.jflagMaps[v.Long].Value).Kind().String() {
 						tmpStrSlice := make([]string, len(tmpCommand.jflagMaps[v.Long].Value.([]interface{})))
 						for k2, v2 := range tmpCommand.jflagMaps[v.Long].Value.([]interface{}) {
@@ -623,7 +623,8 @@ func (a *App) Run() (err error) {
 					return fmt.Errorf("missing arg value")
 				}
 				argName := strings.Split(arg, "=")[0]
-				argValue := strings.Split(arg, "=")[1]
+				argValueTmp := strings.Split(arg, "=")[1:]
+				argValue := strings.Join(argValueTmp, "=")
 				//argValueStr := strings.Join(argValue, "=")
 				//jlog.Info("argValue:",trimQuotes(argValue))
 				splitArgs, err := shlex.Split(argValue, true, false)
@@ -676,7 +677,8 @@ func (a *App) Run() (err error) {
 					return fmt.Errorf("missing arg value")
 				}
 				argName := strings.Split(arg, "=")[0]
-				argValue := strings.Split(arg, "=")[1]
+				argValueTmp := strings.Split(arg, "=")[1:]
+				argValue := strings.Join(argValueTmp, "=")
 				//argValueStr := strings.Join(argValue,"=")
 				//jlog.Info("argValue:", argValue)
 				// 区分arg的类型
@@ -686,7 +688,7 @@ func (a *App) Run() (err error) {
 					for _, v := range c.App.currentCmd.args.list {
 						if v.Name == argName {
 							// 不是list类型
-							//jlog.Error(v.isList)
+							jlog.Error(argValue)
 							if !v.isList {
 								splitArgs, err = shlex.Split(argValue, true, false)
 								if err != nil {
