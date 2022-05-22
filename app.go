@@ -26,7 +26,6 @@ package jishell
 
 import (
 	"fmt"
-	"github.com/chroblert/jlog"
 	"io"
 	"os"
 	"reflect"
@@ -309,9 +308,7 @@ func (a *App) RunCommand(args []string) error {
 			//jlog.Info(reflect.TypeOf(v).Kind().String())
 			if reflect.TypeOf(v.Value).Kind().String() == "string" {
 				if len(v.Value.(string)) > 0 {
-					jlog.Warn("fg:", k, ":", v.Value)
 					splitArgs, _ := shlex.Split(v.Value.(string), true, false)
-					jlog.Warn("splitArgs:", splitArgs)
 					fg[k] = &FlagMapItem{
 						Value:     splitArgs[0],
 						IsDefault: false,
