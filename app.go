@@ -26,6 +26,7 @@ package jishell
 
 import (
 	"fmt"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"io"
 	"os"
 	"reflect"
@@ -537,8 +538,10 @@ func (a *App) Run() (err error) {
 					return fmt.Errorf("error: CurrentCommond is %v", tmpCommand)
 				}
 				// 输出当前flag
-				a.Printf("%-10v%-30v%-10v%-10v%v\n", "name", "value", "type", "isDefault", "description")
-				a.Println("=======================================================================")
+				t := table.NewWriter()
+				t.AppendHeader(table.Row{"Name", "Value", "type", "Description"})
+				//a.Printf("%-10v%-30v%-10v%-10v%v\n", "name", "value", "type", "isDefault", "description")
+				//a.Println("=======================================================================")
 				// JC 220512 遍历输出flag
 				for _, v := range tmpCommand.flags.list {
 					// JC 220514: 过滤掉help flag
@@ -551,11 +554,14 @@ func (a *App) Run() (err error) {
 						for k2, v2 := range tmpCommand.jflagMaps[v.Long].Value.([]interface{}) {
 							tmpStrSlice[k2] = fmt.Sprintf("%v", v2)
 						}
-						a.Printf("%-10v%-30v%-10v%v\n", v.Long, "["+strings.Join(tmpStrSlice, " ")+"]", "flag", v.HelpArgs+". "+v.Help)
+						t.AppendRow(table.Row{v.Long, fmt.Sprintf("[%s]", strings.Join(tmpStrSlice, " ")), "flag", v.HelpArgs + ". " + v.Help})
+						//a.Printf("%-10v%-30v%-10v%v\n", v.Long, "["+strings.Join(tmpStrSlice, " ")+"]", "flag", v.HelpArgs+". "+v.Help)
 					} else {
-						a.Printf("%-10v%-30v%-10v%v\n", v.Long, tmpCommand.jflagMaps[v.Long].Value, "flag", v.HelpArgs+". "+v.Help)
+						t.AppendRow(table.Row{v.Long, tmpCommand.jflagMaps[v.Long].Value, "flag", v.HelpArgs + ". " + v.Help})
+						//a.Printf("%-10v%-30v%-10v%v\n", v.Long, tmpCommand.jflagMaps[v.Long].Value, "flag", v.HelpArgs+". "+v.Help)
 					}
 				}
+				t.AppendSeparator()
 				// JC 220512 遍历输出args
 				for _, v := range tmpCommand.args.list {
 					tmpStrSliceLen := 0
@@ -575,11 +581,14 @@ func (a *App) Run() (err error) {
 						} else {
 							tmpArgValue = fmt.Sprintf("%v", tmpCommand.jargMaps[v.Name].Value)
 						}
-						a.Printf("%-10v%-30v%-10v%v\n", v.Name, tmpArgValue, "arg", v.HelpArgs+". "+v.Help)
+						t.AppendRow(table.Row{v.Name, tmpArgValue, "arg", v.HelpArgs + ". " + v.Help})
+						//a.Printf("%-10v%-30v%-10v%v\n", v.Name, tmpArgValue, "arg", v.HelpArgs+". "+v.Help)
 					} else {
-						a.Printf("%-10v%-30v%-10v%v\n", v.Name, "", "arg", v.HelpArgs+". "+v.Help)
+						t.AppendRow(table.Row{v.Name, "", "arg", v.HelpArgs + ". " + v.Help})
+						//a.Printf("%-10v%-30v%-10v%v\n", v.Name, "", "arg", v.HelpArgs+". "+v.Help)
 					}
 				}
+				a.Println(t.Render())
 				return nil
 			},
 			isBuiltin: true,
