@@ -26,6 +26,7 @@ package jishell
 
 import (
 	"fmt"
+	"github.com/chroblert/jishell/jconfig"
 	"github.com/chroblert/jlog"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"io"
@@ -385,14 +386,18 @@ func (a *App) Run() (err error) {
 		Name: "help",
 
 		Help:      "use 'help [command]' for command help",
-		HelpGroup: "Core Commands",
+		HelpGroup: jconfig.CORE_COMMAND_STR,
 		Args: func(a *Args) {
 			a.StringList("command", "the name of the command")
 		},
 		Run: func(c *Context) error {
 			args := c.Args.StringList("command")
 			if len(args) == 0 {
-				a.printHelp(a, a.isShell)
+				if c.App.currentCmd == nil {
+					a.printHelp(a, a.isShell)
+				} else {
+					a.printCommandHelp(a, c.App.currentCmd, false)
+				}
 				return nil
 			}
 			var cmd *Command
@@ -408,7 +413,7 @@ func (a *App) Run() (err error) {
 				a.PrintError(fmt.Errorf("command not found"))
 				return nil
 			}
-			a.printCommandHelp(a, cmd, a.isShell)
+			a.printCommandHelp(a, cmd, true)
 			return nil
 		},
 		isBuiltin: true,
@@ -429,7 +434,7 @@ func (a *App) Run() (err error) {
 			Name: "exit",
 
 			Help:      "exit the shell",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Run: func(c *Context) error {
 				c.Stop()
 				return nil
@@ -440,7 +445,7 @@ func (a *App) Run() (err error) {
 			Name: "clear",
 
 			Help:      "clear the screen",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Run: func(c *Context) error {
 				readline.ClearScreen(a.rl)
 				return nil
@@ -454,7 +459,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "switch command",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "use <command|Alias|CMDPath>",
 			//Flags:     nil,
 			Args: func(a *Args) {
@@ -527,7 +532,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "show options",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "show options",
 			Flags:     nil,
 			Args:      nil,
@@ -605,7 +610,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "set flag",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "setf flag=flagValue",
 			//Flags:     nil,
 			Args: func(a *Args) {
@@ -659,7 +664,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "set arg",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "seta arg=argValue",
 			//Flags:     nil,
 			Args: func(a *Args) {
@@ -731,7 +736,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "run current command",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "run",
 			Flags:     nil,
 			Args:      nil,
@@ -775,7 +780,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "run current command",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "run",
 			Flags:     nil,
 			Args:      nil,
@@ -819,7 +824,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "back",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "back",
 			Flags:     nil,
 			Args: func(a *Args) {
@@ -879,7 +884,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "unset flag",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "unsetf <long flag name>|all",
 			Flags:     nil,
 			Args: func(a *Args) {
@@ -926,7 +931,7 @@ func (a *App) Run() (err error) {
 			Aliases:   nil,
 			Help:      "unset arg ",
 			LongHelp:  "",
-			HelpGroup: "Core Commands",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
 			Usage:     "unseta <arg name>|all",
 			Flags:     nil,
 			Args: func(a *Args) {

@@ -26,6 +26,7 @@ package jishell
 
 import (
 	"fmt"
+	"github.com/chroblert/jishell/jconfig"
 	"os"
 	"sort"
 
@@ -70,7 +71,7 @@ func defaultPrintHelp(a *App, shell bool) {
 
 		key := c.HelpGroup
 		if len(key) == 0 {
-			key = "Commands:"
+			key = "Sub Command:"
 		}
 		cc := groups[key]
 		if cc == nil {
@@ -94,19 +95,6 @@ func defaultPrintHelp(a *App, shell bool) {
 
 		var output []string
 		for _, c := range cc.list {
-			//if c.CMDPath == ""{
-			//	name := c.Name
-			//	for _, a := range c.Aliases {
-			//		name += ", " + a
-			//	}
-			//	output = append(output, fmt.Sprintf("%s | %v", name, c.Help))
-			//}else{
-			//	name := c.CMDPath
-			//	for _, a := range c.Aliases {
-			//		name += ", " + a
-			//	}
-			//	output = append(output, fmt.Sprintf("%s | %v", name, c.Help))
-			//}
 			// JC 220512: 输出 命令 路径 帮助信息
 			output = append(output, fmt.Sprintf("%s | %s | %v", c.Name, c.parentPath, c.Help))
 		}
@@ -131,7 +119,7 @@ func defaultPrintHelp(a *App, shell bool) {
 		if hasSubCmds {
 			// Headline.
 			a.Println()
-			printHeadline(a, "Sub Commands:")
+			printHeadline(a, "Sub Command:")
 			hp := headlinePrinter(a)
 
 			// Only print the first level of sub commands.
@@ -164,7 +152,7 @@ func defaultPrintHelp(a *App, shell bool) {
 	a.Println()
 }
 
-func defaultPrintCommandHelp(a *App, cmd *Command, shell bool) {
+func defaultPrintCommandHelp(a *App, cmd *Command, bHasArgs bool) {
 	// Columnize options.
 	config := columnize.DefaultConfig()
 	config.Delim = "|"
@@ -172,21 +160,29 @@ func defaultPrintCommandHelp(a *App, cmd *Command, shell bool) {
 	config.Prefix = "  "
 
 	// Help description.
-	if len(cmd.LongHelp) > 0 {
-		a.Printf("\n%s\n", cmd.LongHelp)
-	} else {
-		a.Printf("\n%s\n", cmd.Help)
+	if bHasArgs {
+		if len(cmd.LongHelp) > 0 {
+			a.Printf("\n%s\n", cmd.LongHelp)
+		} else {
+			a.Printf("\n%s\n", cmd.Help)
+		}
 	}
 
 	// Usage.
 	printUsage(a, cmd)
 
 	// Arguments.
-	printArgs(a, &cmd.args)
+	if bHasArgs {
+		printArgs(a, &cmd.args)
+	}
 
 	// Flags.
-	printFlags(a, &cmd.flags)
-
+	if bHasArgs {
+		printFlags(a, &cmd.flags)
+	}
+	if !bHasArgs {
+		printCoreCommands(a)
+	}
 	// Sub Commands.
 	if len(cmd.commands.list) > 0 {
 		// Only print the first level of sub commands.
@@ -200,7 +196,7 @@ func defaultPrintCommandHelp(a *App, cmd *Command, shell bool) {
 		}
 
 		a.Println()
-		printHeadline(a, "Sub Commands:")
+		printHeadline(a, "Sub Command:")
 		a.Printf("%s\n", columnize.Format(output, config))
 	}
 
@@ -228,6 +224,34 @@ func printHeadline(a *App, s string) {
 	} else {
 		_, _ = hp(s)
 	}
+}
+
+func printCoreCommands(a *App) {
+	// Columnize options.
+	config := columnize.DefaultConfig()
+	config.Delim = "|"
+	config.Glue = "  "
+	config.Prefix = "  "
+
+	//groups := make(map[string]*Commands)
+	coreCommands := new(Commands)
+	for _, c := range a.commands.list {
+		if c.HelpGroup == jconfig.CORE_COMMAND_STR {
+			coreCommands.Add(c)
+		}
+	}
+
+	// Sort the map by the keys.
+	var output []string
+	for _, c := range coreCommands.list {
+		output = append(output, fmt.Sprintf("%s | %s | %v", c.Name, c.parentPath, c.Help))
+	}
+	if len(output) > 0 {
+		a.Println()
+		printHeadline(a, fmt.Sprintf("%s:", jconfig.CORE_COMMAND_STR))
+		a.Printf("%s\n", columnize.Format(output, config))
+	}
+	a.Println()
 }
 
 func printUsage(a *App, cmd *Command) {
