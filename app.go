@@ -381,55 +381,49 @@ func (a *App) Run() (err error) {
 	//jlog.Error(len(args),args)
 	//jlog.Error(a.config.NoColor,a.isShell)
 
-	// Add general builtin commands.
-	a.addCommand(&Command{
-		Name: "help",
-
-		Help:      "use 'help [command]' for command help",
-		HelpGroup: jconfig.CORE_COMMAND_STR,
-		Args: func(a *Args) {
-			a.StringList("command", "the name of the command")
-		},
-		Run: func(c *Context) error {
-			args := c.Args.StringList("command")
-			if len(args) == 0 {
-				if c.App.currentCmd == nil {
-					a.printHelp(a, a.isShell)
-				} else {
-					a.printCommandHelp(a, c.App.currentCmd, false)
-				}
-				return nil
-			}
-			var cmd *Command
-			var err error
-			if c.App.currentCmd == nil {
-				cmd, _, err = a.commands.FindCommand(args)
-			} else {
-				cmd, _, err = a.currentCmd.commands.FindCommand(args)
-			}
-			if err != nil {
-				return err
-			} else if cmd == nil {
-				a.PrintError(fmt.Errorf("command not found"))
-				return nil
-			}
-			a.printCommandHelp(a, cmd, true)
-			return nil
-		},
-		isBuiltin: true,
-	}, false)
-
-	// Check if help should be displayed.
-	if a.flagMap.Bool("help") {
-		a.printHelp(a, false)
-		return nil
-	}
-
 	// Add shell builtin commands.
 	// Ensure to add all commands before running the init hook.
 	// If the init hook does something with the app commands, then these should also be included.
 	if a.isShell {
 		// Add shell builtin commands.
+		// Add general builtin commands.
+		a.addCommand(&Command{
+			Name: "help",
+
+			Help:      "use 'help [command]' for command help",
+			HelpGroup: jconfig.CORE_COMMAND_STR,
+			Args: func(a *Args) {
+				a.StringList("command", "the name of the command")
+			},
+			Run: func(c *Context) error {
+				args := c.Args.StringList("command")
+				if len(args) == 0 {
+					if c.App.currentCmd == nil {
+						a.printHelp(a, a.isShell)
+					} else {
+						a.printCommandHelp(a, c.App.currentCmd, false)
+					}
+					return nil
+				}
+				var cmd *Command
+				var err error
+				if c.App.currentCmd == nil {
+					cmd, _, err = a.commands.FindCommand(args)
+				} else {
+					cmd, _, err = a.currentCmd.commands.FindCommand(args)
+				}
+				if err != nil {
+					return err
+				} else if cmd == nil {
+					a.PrintError(fmt.Errorf("command not found"))
+					return nil
+				}
+				a.printCommandHelp(a, cmd, true)
+				return nil
+			},
+			isBuiltin: true,
+		}, false)
+
 		a.AddCommand(&Command{
 			Name: "exit",
 
@@ -986,6 +980,11 @@ func (a *App) Run() (err error) {
 
 	// Check if a command chould be executed in non-interactive mode.
 	if !a.isShell {
+		// Check if help should be displayed.
+		if a.flagMap.Bool("help") {
+			a.printHelp(a, false)
+			return nil
+		}
 		return a.RunCommand(args)
 	}
 
