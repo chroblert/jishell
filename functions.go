@@ -162,9 +162,11 @@ func defaultPrintCommandHelp(a *App, cmd *Command, bHasArgs bool) {
 	// Help description.
 	if bHasArgs {
 		if len(cmd.LongHelp) > 0 {
-			a.Printf("\n%s\n", cmd.LongHelp)
+			a.Printf("\nCommand: %s\n  %s\n", cmd.Name, cmd.LongHelp)
+		} else if len(cmd.Help) > 0 {
+			a.Printf("\nCommand: %s\n  %s\n", cmd.Name, cmd.Help)
 		} else {
-			a.Printf("\n%s\n", cmd.Help)
+			a.Printf("\nCommand: %s\n", cmd.Name)
 		}
 	}
 
