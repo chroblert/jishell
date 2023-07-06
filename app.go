@@ -94,7 +94,7 @@ func New(c *Config) (a *App) {
 	// Register the builtin flags.
 	a.flags.Bool("h", "help", false, "display help")
 	a.flags.BoolL("nocolor", false, "disable color output")
-	//a.flags.Bool("i", "interactive", true, "enable interactive mode")
+	a.flags.Bool("i", "interactive", false, "enable interactive mode")
 
 	// Register the user flags, if present.
 	if c.Flags != nil {
@@ -370,9 +370,9 @@ func (a *App) Run() (err error) {
 	// Check if nocolor was set.
 	a.config.NoColor = a.flagMap.Bool("nocolor")
 	// Determine if this is a shell session.
-	a.isShell = len(args) == 0
+	//a.isShell = len(args) == 0
 	// JC 220520 获取-i flag值
-	//a.isShell = a.flagMap.Bool("interactive")
+	a.isShell = a.flagMap.Bool("interactive")
 	// JC 220520 再根据是否有别的参数，来设置是否为shell模式
 	//if len(args) > 0 {
 	//	a.isShell = false

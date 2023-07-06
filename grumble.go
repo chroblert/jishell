@@ -36,6 +36,7 @@ func Main(a *App) {
 	err := a.Run()
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		a.printHelp(a, a.isShell)
 		os.Exit(1)
 	}
 }
