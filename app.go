@@ -27,7 +27,6 @@ package jishell
 import (
 	"fmt"
 	"github.com/chroblert/jishell/jconfig"
-	"github.com/chroblert/jlog"
 	"io"
 	"os"
 	"reflect"
@@ -268,10 +267,8 @@ func (a *App) RunCommand(args []string) error {
 		err error
 	)
 	if a.currentCmd == nil {
-		jlog.Debug("currentCmd is nil")
 		cmds, flags, args, err = a.commands.parse(args, a.flagMap, false)
 	} else {
-		jlog.Debug("currentCmd is not nil:", a.currentCmd.Name)
 		var tmpCommands = Commands{}
 		for _, v := range a.commands.list {
 			if jconfig.CORE_COMMAND_STR == v.HelpGroup {
