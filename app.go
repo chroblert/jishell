@@ -56,7 +56,7 @@ type App struct {
 	shellHook func(a *App) error
 
 	printHelp        func(a *App, shell bool)
-	printCommandHelp func(a *App, cmd *Command, shell bool)
+	printCommandHelp func(a *App, cmd *Command, bIsShell, bHasArgs bool)
 	interruptHandler func(a *App, count int)
 	printASCIILogo   func(a *App)
 
@@ -196,7 +196,7 @@ func (a *App) SetPrintHelp(f func(a *App, shell bool)) {
 }
 
 // SetPrintCommandHelp sets the print help function for a single command.
-func (a *App) SetPrintCommandHelp(f func(a *App, c *Command, shell bool)) {
+func (a *App) SetPrintCommandHelp(f func(a *App, c *Command, shell bool, bHasArgs bool)) {
 	a.printCommandHelp = f
 }
 
@@ -289,7 +289,7 @@ func (a *App) RunCommand(args []string) error {
 
 	// Print the command help if the command run function is nil or if the help flag is set.
 	if flags.Bool("help") || cmd.Run == nil {
-		a.printCommandHelp(a, cmd, a.isShell)
+		a.printCommandHelp(a, cmd, a.isShell, len(args) > 0 || len(flags) > 0)
 		return nil
 	}
 	//jlog.Warn("runCommand:",cmd.Name,cmd.isBuiltin)

@@ -152,7 +152,7 @@ func defaultPrintHelp(a *App, shell bool) {
 	a.Println()
 }
 
-func defaultPrintCommandHelp(a *App, cmd *Command, bHasArgs bool) {
+func defaultPrintCommandHelp(a *App, cmd *Command, bIsShell bool, bHasArgs bool) {
 	// Columnize options.
 	config := columnize.DefaultConfig()
 	config.Delim = "|"
@@ -160,7 +160,7 @@ func defaultPrintCommandHelp(a *App, cmd *Command, bHasArgs bool) {
 	config.Prefix = "  "
 
 	// Help description.
-	if bHasArgs {
+	if bIsShell {
 		if len(cmd.LongHelp) > 0 {
 			a.Printf("\nCommand: %s\n  %s\n", cmd.Name, cmd.LongHelp)
 		} else if len(cmd.Help) > 0 {
@@ -171,18 +171,28 @@ func defaultPrintCommandHelp(a *App, cmd *Command, bHasArgs bool) {
 	}
 
 	// Usage.
-	printUsage(a, cmd)
+	if bIsShell && bHasArgs {
+		printUsage(a, cmd)
+	} else {
+		printUsage(a, cmd)
+
+	}
 
 	// Arguments.
-	if bHasArgs {
+	if bIsShell && bHasArgs {
+		printArgs(a, &cmd.args)
+	} else {
 		printArgs(a, &cmd.args)
 	}
 
 	// Flags.
-	if bHasArgs {
+	if bIsShell && bHasArgs {
+		printFlags(a, &cmd.flags)
+	} else {
 		printFlags(a, &cmd.flags)
 	}
-	if !bHasArgs {
+
+	if bIsShell && !bHasArgs {
 		printCoreCommands(a)
 	}
 	// Sub Commands.
@@ -270,17 +280,19 @@ func printUsage(a *App, cmd *Command) {
 	// Layout: Cmd [Flags] Args
 	a.Printf("  %s", cmd.Name)
 	if !cmd.flags.empty() {
-		a.Printf(" [flags]")
+		a.Printf(" [flags] [--]")
 	}
 	if !cmd.args.empty() {
 		for _, arg := range cmd.args.list {
 			name := arg.Name
-			if arg.isList {
-				name += "..."
-			}
+			//if arg.isList {
+			//	name += ","+name+"..."
+			//}
 
 			if arg.optional {
-				a.Printf(" [%s]", name)
+				//a.Printf(" [%s]", name)
+				a.Printf(" %s", name)
+
 			} else {
 				a.Printf(" %s", name)
 			}

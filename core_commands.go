@@ -25,7 +25,7 @@ func core_help(a *App) *Command {
 				if c.App.currentCmd == nil {
 					a.printHelp(a, a.isShell)
 				} else {
-					a.printCommandHelp(a, c.App.currentCmd, false)
+					a.printCommandHelp(a, c.App.currentCmd, a.isShell, len(args) > 0)
 				}
 				return nil
 			}
@@ -42,7 +42,7 @@ func core_help(a *App) *Command {
 				a.PrintError(fmt.Errorf("command not found"))
 				return nil
 			}
-			a.printCommandHelp(a, cmd, true)
+			a.printCommandHelp(a, cmd, a.isShell, len(args) > 0)
 			return nil
 		},
 		isBuiltin: true,
@@ -391,7 +391,7 @@ func core_run(a *App) *Command {
 			}
 			// 判断是否设置了help=true
 			if tmpCommand.jflagMaps["help"].Value == true {
-				c.App.printCommandHelp(c.App, tmpCommand, c.App.isShell)
+				c.App.printCommandHelp(c.App, tmpCommand, c.App.isShell, true)
 				return nil
 			}
 			// 执行前判断arg是否全部赋值

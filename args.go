@@ -191,7 +191,7 @@ func (a *Args) String(name, help string, opts ...ArgOption) {
 
 // StringList registers a string list argument.
 func (a *Args) StringList(name, help string, opts ...ArgOption) {
-	a.register(name, help, "string list", true,
+	a.register(name, help, "string list,separate by comma.eg: ele1,ele2,ele3...", true,
 		func(args []string, res ArgMap) ([]string, error) {
 			//jlog.Error(len(args),args)
 			splitArgs, err := shlex.Split(args[0], true, false, ',')
