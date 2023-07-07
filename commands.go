@@ -177,7 +177,11 @@ func (c *Commands) parse(
 		args = args[1:]
 		cmds = append(cmds, cmd)
 		cur = &cmd.commands
-
+		// 使用--进行分隔。解决参数值可能与子命令字面量一致的问题
+		var bDoubleBar = false
+		if len(args) > 0 && args[0] == "--" {
+			bDoubleBar = true
+		}
 		// Parse the command flags.
 		fg := make(FlagMap)
 		args, err = cmd.flags.parse(args, fg)
@@ -187,6 +191,11 @@ func (c *Commands) parse(
 
 		if !skipFlagMaps {
 			fgs = append(fgs, fg)
+		}
+
+		// 使用--进行分隔。解决参数值可能与子命令字面量一致的问题
+		if len(args) > 0 && bDoubleBar {
+			break
 		}
 	}
 
