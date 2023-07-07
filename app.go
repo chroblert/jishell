@@ -605,10 +605,11 @@ func (a *App) Run() (err error) {
 			Help:      "set flag",
 			LongHelp:  "",
 			HelpGroup: jconfig.CORE_COMMAND_STR,
-			Usage:     "setf flag=flagValue",
+			Usage:     "setf flag flagValue",
 			//Flags:     nil,
 			Args: func(a *Args) {
-				a.String("args", "flag=flagValue")
+				a.String("argName", "setf flag flagValue")
+				a.String("argValue", "setf flag flagValue")
 			},
 			Run: func(c *Context) error {
 				// 获取当前command
@@ -617,13 +618,18 @@ func (a *App) Run() (err error) {
 					return fmt.Errorf("error: CurrentCommond is %v", tmpCommand)
 				}
 				// 获取设置的参数
-				arg := c.Args.String("args")
-				if !strings.ContainsRune(arg, '=') {
-					return fmt.Errorf("missing arg value")
-				}
-				argName := strings.Split(arg, "=")[0]
-				argValueTmp := strings.Split(arg, "=")[1:]
-				argValue := strings.Join(argValueTmp, "=")
+				argName := c.Args.String("argName")
+				argValue := c.Args.String("argValue")
+				//test1, err := shlex.Split(argValue2, true, false)
+				//for _,v := range test1{
+				//	jlog.Debug("_",v,"_")
+				//}
+				//if !strings.ContainsRune(arg, '=') {
+				//	return fmt.Errorf("missing arg value")
+				//}
+				//argName := strings.Split(arg, "=")[0]
+				//argValueTmp := strings.Split(arg, "=")[1:]
+				//argValue := strings.Join(argValueTmp, "=")
 				//argValueStr := strings.Join(argValue, "=")
 				//jlog.Info("argValue:",trimQuotes(argValue))
 				splitArgs, err := shlex.Split(argValue, true, false)
