@@ -260,13 +260,13 @@ func (a *App) RunCommand(args []string) error {
 	// Parse the arguments string and obtain the command path to the root,
 	// and the command flags.
 	var (
-		cmds []*Command
-		fg   FlagMap
+		cmds  []*Command
+		flags FlagMap
 		//args []string
 		err error
 	)
 	if a.currentCmd == nil {
-		cmds, fg, args, err = a.commands.parse(args, a.flagMap, false)
+		cmds, flags, args, err = a.commands.parse(args, a.flagMap, false)
 	} else {
 		var tmpCommands = Commands{}
 		for _, v := range a.commands.list {
@@ -276,7 +276,7 @@ func (a *App) RunCommand(args []string) error {
 			tmpCommands.Add(v)
 		}
 		//tmpCommands = a.commands.
-		cmds, fg, args, err = tmpCommands.parse(args, a.flagMap, false)
+		cmds, flags, args, err = tmpCommands.parse(args, a.flagMap, false)
 	}
 	if err != nil {
 		return err
@@ -288,7 +288,7 @@ func (a *App) RunCommand(args []string) error {
 	cmd := cmds[len(cmds)-1]
 
 	// Print the command help if the command run function is nil or if the help flag is set.
-	if fg.Bool("help") || cmd.Run == nil {
+	if flags.Bool("help") || cmd.Run == nil {
 		a.printCommandHelp(a, cmd, a.isShell)
 		return nil
 	}
@@ -304,12 +304,12 @@ func (a *App) RunCommand(args []string) error {
 			args[k] = splitArgs[0]
 		}
 		// 处理flag的双引号
-		for k, v := range fg {
+		for k, v := range flags {
 			//jlog.Info(reflect.TypeOf(v).Kind().String())
 			if reflect.TypeOf(v.Value).Kind().String() == "string" {
 				if len(v.Value.(string)) > 0 {
 					splitArgs, _ := shlex.Split(v.Value.(string), true, false)
-					fg[k] = &FlagMapItem{
+					flags[k] = &FlagMapItem{
 						Value:     splitArgs[0],
 						IsDefault: false,
 					}
@@ -329,7 +329,7 @@ func (a *App) RunCommand(args []string) error {
 	}
 
 	// Create the context and pass the rest args.
-	ctx := newContext(a, cmd, fg, cmdArgMap)
+	ctx := newContext(a, cmd, flags, cmdArgMap)
 
 	// Run the command.
 	err = cmd.Run(ctx)
@@ -518,7 +518,7 @@ Loop:
 
 		// Split the line to args.
 		args, err := shlex.Split(line, true, true)
-		//jlog.Error("args:",len(args),args)
+		//jlog.Error("line:",line,"args:",len(args),args)
 		if err != nil {
 			a.PrintError(fmt.Errorf("invalid args: %v", err))
 			continue Loop

@@ -148,6 +148,7 @@ func (a *Args) parse(args []string, res ArgMap) ([]string, error) {
 		// JC 220514: 调换一下顺序
 		// If it is a list argument, it will consume the rest of the input.
 		// Check that it matches its range.
+		// 用于校验
 		if item.isList {
 			// List以,分隔
 			args0List, err := shlex.Split(args[0], true, false, ',')
