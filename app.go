@@ -658,17 +658,18 @@ func (a *App) Run() (err error) {
 			isBuiltin: true,
 			Completer: nil,
 		})
-		// 添加setf命令
+		// 添加seta命令
 		a.AddCommand(&Command{
 			Name:      "seta",
 			Aliases:   nil,
 			Help:      "set arg",
 			LongHelp:  "",
 			HelpGroup: jconfig.CORE_COMMAND_STR,
-			Usage:     "seta arg=argValue",
+			Usage:     "seta arg argValue",
 			//Flags:     nil,
 			Args: func(a *Args) {
-				a.String("args", "arg=argValue")
+				a.String("argName", "argName")
+				a.String("argValue", "argValue")
 			},
 			Run: func(c *Context) error {
 				// 获取当前command
@@ -677,13 +678,14 @@ func (a *App) Run() (err error) {
 					return fmt.Errorf("error: CurrentCommond is %v", tmpCommand)
 				}
 				// 获取设置的参数
-				arg := c.Args.String("args")
-				if !strings.ContainsRune(arg, '=') {
-					return fmt.Errorf("missing arg value")
-				}
-				argName := strings.Split(arg, "=")[0]
-				argValueTmp := strings.Split(arg, "=")[1:]
-				argValue := strings.Join(argValueTmp, "=")
+				argName := c.Args.String("argName")
+				argValue := c.Args.String("argValue")
+				//if !strings.ContainsRune(arg, '=') {
+				//	return fmt.Errorf("missing arg value")
+				//}
+				//argName := strings.Split(arg, "=")[0]
+				//argValueTmp := strings.Split(arg, "=")[1:]
+				//argValue := strings.Join(argValueTmp, "=")
 				//argValueStr := strings.Join(argValue,"=")
 				//jlog.Info("argValue:", argValue)
 				// 区分arg的类型
@@ -693,7 +695,7 @@ func (a *App) Run() (err error) {
 					for _, v := range c.App.currentCmd.args.list {
 						if v.Name == argName {
 							// 不是list类型
-							jlog.Error(argValue)
+							//jlog.Error(argValue)
 							if !v.isList {
 								splitArgs, err = shlex.Split(argValue, true, false)
 								if err != nil {
