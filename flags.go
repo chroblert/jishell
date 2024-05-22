@@ -57,6 +57,13 @@ func (f *Flags) empty() bool {
 	return len(f.list) == 0
 }
 
+// display JC 240521显示所有的flag及设置的值
+func (f *Flags) display() {
+	for _, fI := range f.list {
+		fmt.Println("--", fI.Long, fI.Default)
+	}
+}
+
 // sort the flags by their name.
 func (f *Flags) sort() {
 	sort.Slice(f.list, func(i, j int) bool {

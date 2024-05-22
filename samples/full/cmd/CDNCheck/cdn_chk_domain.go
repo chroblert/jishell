@@ -1,8 +1,8 @@
 package CDNCheck
 
 import (
-	"github.com/chroblert/jgoutils/jlog"
 	"github.com/chroblert/jishell"
+	"github.com/chroblert/jlog"
 	"github.com/spf13/viper"
 )
 

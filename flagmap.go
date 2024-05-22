@@ -50,6 +50,16 @@ func (f FlagMap) copyMissingValues(m FlagMap, copyDefault bool) {
 	}
 }
 
+// display JC 240521显示所有的flag及设置的值
+func (f FlagMap) display() {
+	fmt.Println("----------------------------------------------")
+	fmt.Println("flagName\t|\tIsDefault\t|\tflagValue")
+	for flagName, fMI := range f {
+		fmt.Printf("--%s\t\t%v\t\t%v\n", flagName, fMI.IsDefault, fMI.Value)
+	}
+	fmt.Println("----------------------------------------------")
+}
+
 // String returns the given flag value as string.
 // Panics if not present. Flags must be registered.
 func (f FlagMap) String(long string) string {

@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/chroblert/jgoutils/jlog"
 	"github.com/chroblert/jishell"
 	_ "github.com/chroblert/jishell/samples/full/cmd/CDNCheck"
+	"github.com/chroblert/jlog"
 	"github.com/spf13/viper"
 )
 

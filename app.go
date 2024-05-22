@@ -27,6 +27,7 @@ package jishell
 import (
 	"fmt"
 	"github.com/chroblert/jishell/jconfig"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"io"
 	"os"
 	"reflect"
@@ -46,6 +47,7 @@ type App struct {
 	config        *Config
 	commands      Commands
 	isShell       bool
+	debug         bool
 	currentPrompt string
 
 	flags   Flags
@@ -94,6 +96,7 @@ func New(c *Config) (a *App) {
 	a.flags.Bool("h", "help", false, "display help")
 	a.flags.BoolL("nocolor", false, "disable color output")
 	a.flags.Bool("i", "interactive", false, "enable interactive mode")
+	a.flags.BoolL("debug", false, "display detail message.eg,flags and args")
 
 	// Register the user flags, if present.
 	if c.Flags != nil {
@@ -333,7 +336,29 @@ func (a *App) RunCommand(args []string) error {
 
 	// Create the context and pass the rest args.
 	ctx := newContext(a, cmd, flags, cmdArgMap)
-
+	// JC 240521 如果开启了debug，则显示命令的flag和arg
+	if a.debug {
+		// flags中至少有一个help flag
+		if len(cmd.flags.list) > 1 || len(cmd.args.list) > 0 {
+			t := table.NewWriter()
+			t.AppendHeader(table.Row{"Name", "Value", "default", "type", "Description"})
+			// JC 240512 遍历输出flag
+			//tmpCommand := cmd
+			for _, v := range cmd.flags.list {
+				// JC 220514: 过滤掉help flag
+				if v.Long == "help" {
+					continue
+				}
+				t.AppendRow(table.Row{v.Long, flags[v.Long].Value, flags[v.Long].IsDefault, "flag", v.HelpArgs + ". " + v.Help})
+			}
+			t.AppendSeparator()
+			// JC 240522 遍历输出arg
+			for _, v := range cmd.args.list {
+				t.AppendRow(table.Row{v.Name, cmdArgMap[v.Name].Value, cmdArgMap[v.Name].IsDefault, "arg", v.HelpArgs + ". " + v.Help})
+			}
+			a.Println(t.Render())
+		}
+	}
 	// Run the command.
 	err = cmd.Run(ctx)
 	if err != nil {
@@ -374,6 +399,8 @@ func (a *App) Run() (err error) {
 	//a.isShell = len(args) == 0
 	// JC 220520 获取-i flag值
 	a.isShell = a.flagMap.Bool("interactive")
+	// JC 240521 获取--debug flag值
+	a.debug = a.flagMap.Bool("debug")
 	// JC 220520 再根据是否有别的参数，来设置是否为shell模式
 	//if len(args) > 0 {
 	//	a.isShell = false
